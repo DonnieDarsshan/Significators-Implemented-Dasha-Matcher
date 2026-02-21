@@ -304,6 +304,22 @@ button{
 
 	<span>Pivot :</span>
 	<select id="kundaliPivotVim"></select>
+	
+	
+	<select id="vimExpandLevel" style="
+	  background:#010a08;
+	  color:#ecfdf5;
+	  border:1px solid #10b981;
+	  padding:4px 8px;
+	  font-weight:900;
+	">
+	  <option value="2" selected>BUKTHI</option>
+	  <option value="3">ANTARA</option>
+	</select>
+	
+	
+	<button onclick="collapseAllDasha()">Collapse All</button>
+
 
   <button onclick="setVimToday()">Current Transit</button>
   <input type="date" id="vimEventDate">
@@ -1854,7 +1870,7 @@ function buildFullDasha(containerId, basePlanet) {
       bhuktiRow.dataset.s = bhuktiStart;
       bhuktiRow.dataset.e = bhuktiEnd;
       bhuktiRow.dataset.l = 2;
-      bhuktiRow.style = GRID_STYLE + "cursor:pointer; padding:6px 10px; margin:2px 0; border:1px solid #064e3b; background:#010a08; color:#ecfdf5;";
+      bhuktiRow.style = GRID_STYLE + "cursor:pointer; padding:6px 10px; margin:2px 0; border:1px solid #3a2415; border-left:4px solid #3a2415; background:#1e130c; color:#ecfdf5;";
 
       let bhuktiData = formatDashaLine("Bhukti", bhuktiLord, bhuktiSig, bhuktiStart, bhuktiEnd);
 
@@ -1887,7 +1903,7 @@ function buildFullDasha(containerId, basePlanet) {
         line.dataset.s = antaraStart;
         line.dataset.e = antaraEnd;
         line.dataset.l = 3;
-        line.style = GRID_STYLE + "cursor:pointer; padding:4px 10px; margin:1px 0; border:1px solid #1e3a8a; background:#0f172a; color:#ccfbf1;";
+        line.style = GRID_STYLE + "cursor:pointer; padding:4px 10px; margin:1px 0; border:1px solid #00f5d4; border-left:4px solid #00f5d4; background:#002a22; color:#a7f3d0;";
 
         let antaraData = formatDashaLine("Antara", antaraLord, antaraSig, antaraStart, antaraEnd);
 
@@ -1904,22 +1920,64 @@ function buildFullDasha(containerId, basePlanet) {
         `;
 
         line.onclick = (e)=>{
-          e.stopPropagation();
-          line.classList.toggle("active")
-            ? (line.style.background="#0f766e", line.style.border="2px solid #2dd4bf")
-            : (line.style.background="#0f172a", line.style.border="1px solid #1e3a8a");
-        };
+		  e.stopPropagation();
+
+		  const isActive = line.classList.toggle("active");
+
+		  if(isActive){
+			line.style.background="#003b1f";
+			line.style.border="1px solid #10b981";
+			line.style.borderLeft="4px solid #10b981";
+		  }else{
+			line.style.background="#002a22";
+			line.style.border="1px solid #00f5d4";
+			line.style.borderLeft="4px solid #00f5d4";
+		  }
+		};
 
         antaraBox.appendChild(line);
         antaraStart = antaraEnd;
       });
 
+
+
+
+
+
+
       bhuktiRow.onclick = (e)=>{
-        e.stopPropagation();
-        const isOpen = antaraBox.style.display==="block";
-        antaraBox.style.display = isOpen?"none":"block";
-        bhuktiRow.style.background = isOpen?"#010a08":"#7f1d1d";
-      };
+	  e.stopPropagation();
+
+	  // Toggle active state
+	  const isActive = bhuktiRow.classList.toggle("active");
+
+	  const expandMode = document.getElementById("vimExpandLevel")?.value || "2";
+
+		if(expandMode === "3"){
+		  antaraBox.style.display =
+			antaraBox.style.display==="block" ? "none" : "block";
+		}
+
+	  // Apply color purely based on active state
+	  
+	  
+	  if(isActive){
+  // DARK BLUE when clicked
+	  bhuktiRow.style.background="#03035e";
+	  bhuktiRow.style.border="1px solid #3b82f6";
+	  bhuktiRow.style.borderLeft="4px solid #3b82f6";
+	}else{
+	  // Default purple
+	  // Default DARK BROWN
+		bhuktiRow.style.background="#1e130c";
+		bhuktiRow.style.border="1px solid #3a2415";
+		bhuktiRow.style.borderLeft="4px solid #3a2415";
+	}
+	  
+	  
+	  
+	  
+	};
 
       bhuktiBox.appendChild(bhuktiRow);
       bhuktiBox.appendChild(antaraBox);
@@ -1927,10 +1985,17 @@ function buildFullDasha(containerId, basePlanet) {
     });
 
     mahaRow.onclick=()=>{
-      const isOpen = bhuktiBox.style.display==="block";
-      bhuktiBox.style.display = isOpen?"none":"block";
-      mahaRow.style.background = isOpen?"#021b16":"#2b0a3d";
-    };
+	  const isOpen = bhuktiBox.style.display==="block";
+	  bhuktiBox.style.display = isOpen?"none":"block";
+
+	  if(isOpen){
+		mahaRow.style.background="#021b16";
+		mahaRow.style.border="1px solid #10b981";
+	  }else{
+		mahaRow.style.background="#600000";
+		mahaRow.style.border="2px solid #ff4d4d";
+	  }
+	};
 
     box.appendChild(mahaRow);
     box.appendChild(bhuktiBox);
@@ -2071,7 +2136,14 @@ let cur = new Date(birth.getTime() - elapsedYears * MS_YEAR);
         bhuktiRow.innerHTML=`
           <div class="vimSym"></div>
           <div style="font-weight:900; white-space:nowrap;">
-            ${TVIM("Bhukti")} – ${b.name}
+		  
+            ${TVIM("Bhukti")} – ${
+			  y.name==="Sankata"
+				? (j<4 ? "ರಾ - " : "ಕೇ - ")
+				: ""
+			}${TVIM(b.name==="Mangala"?"Mangala_Y":b.name)}
+			
+
           </div>
           <div style="font-weight:900; white-space:nowrap; font-size:0.95em; display:flex; align-items:center; gap:5px;">
             <span style="min-width:175px;">${bStartTxt}</span>
@@ -2110,7 +2182,15 @@ let cur = new Date(birth.getTime() - elapsedYears * MS_YEAR);
           line.innerHTML=`
             <div class="vimSym"></div>
             <div style="font-weight:900; white-space:nowrap;">
-              ${TVIM("Antara")} – ${a.name}
+			
+			
+             ${TVIM("Antara")} – ${
+			  b.name==="Sankata"
+				? (k<4 ? "ರಾ - " : "ಕೇ - ")
+				: ""
+			}${TVIM(a.name==="Mangala"?"Mangala_Y":a.name)}
+			
+
             </div>
             <div style="font-weight:900; white-space:nowrap; font-size:0.95em; display:flex; align-items:center; gap:5px;">
               <span style="min-width:175px;">${aStartTxt}</span>
@@ -2326,37 +2406,76 @@ function findVimTransit(){
   containers.forEach(id=>{
 
     document.querySelectorAll("#"+id+" .active")
-      .forEach(n=>{
-        n.classList.remove("active");
-        n.style.background="";
-        n.style.color="";
-        n.style.border="";
-      });
+	  .forEach(n=>{
+		n.classList.remove("active");
 
-    let nodes=[...document.querySelectorAll("#"+id+" div")]
-      .filter(n=>n.dataset && n.dataset.s)
-      .filter(n =>
-        d>=new Date(n.dataset.s) &&
-        d< new Date(n.dataset.e)
-      )
-      .sort((a,b)=>a.dataset.l-b.dataset.l);
+		if(n.dataset.l==="1"){
+		  n.style.background="#021b16";
+		  n.style.border="1px solid #10b981";
+		}
+
+		if(n.dataset.l==="2"){
+		  n.style.background="#3b2a1a";   // BROWN
+		  n.style.border="1px solid #9d4edd";
+		  n.style.borderLeft="4px solid #9d4edd";
+		}
+
+		if(n.dataset.l==="3"){
+		  n.style.background="#002a22";
+		  n.style.border="1px solid #00f5d4";
+		  n.style.borderLeft="4px solid #00f5d4";
+		}
+	  });
+
+
+
+    const expandMode = document.getElementById("vimExpandLevel")?.value || "2";
+
+	let nodes=[...document.querySelectorAll("#"+id+" div")]
+	  .filter(n=>n.dataset && n.dataset.s)
+	  .filter(n =>
+		d>=new Date(n.dataset.s) &&
+		d< new Date(n.dataset.e)
+	  )
+	  .filter(n => parseInt(n.dataset.l) <= parseInt(expandMode))
+	  .sort((a,b)=>a.dataset.l-b.dataset.l);
+
+
+
+
 
     nodes.forEach(n=>{
 
       n.classList.add("active");
 
-      if(n.dataset.l==="1"){
-        n.style.background="#2b0a3d";
-        n.style.border="2px solid #a855f7";
-      }
-      if(n.dataset.l==="2"){
-        n.style.background="#7f1d1d";
-        n.style.border="2px solid #dc2626";
-      }
-      if(n.dataset.l==="3"){
-        n.style.background="#0f766e";
-        n.style.border="2px solid #2dd4bf";
-      }
+
+
+
+
+
+     if(n.dataset.l==="1"){
+	  n.style.background="#600000";
+	  n.style.border="2px solid #ff4d4d";
+	}
+
+	if(n.dataset.l==="2"){
+	  // ACTIVE BHUKTI (when Find button matches)
+	  n.style.background="#03035e";   // Dark Blue
+	  n.style.border="1px solid #3b82f6";
+	  n.style.borderLeft="4px solid #3b82f6";
+	}
+
+	if(n.dataset.l==="3"){
+	  n.style.background="#003b1f";
+	  n.style.border="1px solid #10b981";
+	  n.style.borderLeft="4px solid #10b981";
+	}
+		  
+	  
+	  
+	  
+	  
+	  
 
       let parent=n.parentElement;
       while(parent && parent.id!==id){
@@ -2438,6 +2557,86 @@ function shiftVim(dir){
 
 
 
+
+document.getElementById("vimExpandLevel")
+  ?.addEventListener("change", function(){
+
+    const mode = this.value;
+
+    if(mode === "2"){ // BUKTHI MODE
+
+      const containers = [
+        "vimshottariContainer",
+        "lagnaDashaContainer",
+        "yoginiDashaContainer",
+        "yoginiDashaContainerLagna"
+      ];
+
+      containers.forEach(id=>{
+        document.querySelectorAll("#"+id+" div")
+          .forEach(n=>{
+            if(n.dataset && n.dataset.l==="3"){
+              n.parentElement.style.display="none";
+            }
+          });
+      });
+
+    }
+
+  });
+
+
+
+
+
+
+
+
+function collapseAllDasha(){
+
+  const containers = [
+    "vimshottariContainer",
+    "lagnaDashaContainer",
+    "yoginiDashaContainer",
+    "yoginiDashaContainerLagna"
+  ];
+
+  containers.forEach(id=>{
+
+    // Collapse all nested boxes
+    document.querySelectorAll("#"+id+" div")
+      .forEach(n=>{
+        if(n.style && n.style.display==="block"){
+          n.style.display="none";
+        }
+      });
+
+    // Reset Mahadasha style
+    document.querySelectorAll("#"+id+" div[data-l='1']")
+      .forEach(n=>{
+        n.style.background="#021b16";
+        n.style.border="1px solid #10b981";
+      });
+
+    // Reset Bhukti style
+    document.querySelectorAll("#"+id+" div[data-l='2']")
+      .forEach(n=>{
+        n.style.background="#1e130c";
+        n.style.border="1px solid #3a2415";
+        n.style.borderLeft="4px solid #3a2415";
+      });
+
+    // Reset Antara style
+    document.querySelectorAll("#"+id+" div[data-l='3']")
+      .forEach(n=>{
+        n.style.background="#002a22";
+        n.style.border="1px solid #00f5d4";
+        n.style.borderLeft="4px solid #00f5d4";
+      });
+
+  });
+
+}
 
 
 function toggleSignificators(){
