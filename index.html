@@ -197,7 +197,35 @@ button{
   font-family:'Segoe UI Semibold','Noto Sans',sans-serif;
   font-weight:600;
 }
+
+
+
+#lordshipDeciderWrap table th,
+#lordshipDeciderWrap table td{
+  border:1px solid #10b981;
+  padding:6px;
+  text-align:center;
+  font-weight:800;
+}
+
+
+
+
+
+
+
+
+
 </style>
+
+
+
+
+
+
+
+
+
 </head>
 
 <body>
@@ -215,7 +243,7 @@ button{
   <label><input type="checkbox" id="sign2signMode"> Sign-to-Sign</label>
   <label><input type="checkbox" id="kpMode" checked> KP (0°)</label>
   <label><input type="checkbox" id="vedicMode" > Vedic (15°)</label>
-  <label><input type="checkbox" id="originalASC" checked> Original ASC</label>
+  <label><input type="checkbox" id="originalASC" > Original ASC</label>
   <label><input type="checkbox" id="showCusps" checked> Show Cusps</label>
 
 
@@ -258,6 +286,22 @@ button{
 </div>
 
 <div id="sigContainer" style="margin-top:20px;display:none;flex-direction:column;align-items:center;gap:20px"></div>
+
+
+
+
+<div id="lordshipDeciderWrap" style="
+  margin-top:30px;
+  width:100%;
+  max-width:1400px;
+  margin-left:auto;
+  margin-right:auto;
+"></div>
+
+
+
+
+
 
 
 <div id="vimOptionsBar" style="
@@ -514,6 +558,31 @@ const SIGN_LORDS={
   Aquarius:"Saturn",
   Pisces:"Jupiter"
 };
+
+
+
+
+
+const LORDSHIP_MATRIX = {
+
+1:{ excellent:[3,11], good:[1,5,9], average:[2,7], bad:[4,10], worst:[6,8,12] },
+2:{ excellent:[4,12], good:[2,6,10], average:[3,8], bad:[5,11], worst:[1,7,9] },
+3:{ excellent:[1,5], good:[3,7,11], average:[4,9], bad:[6,12], worst:[2,8,10] },
+4:{ excellent:[2,6], good:[4,8,12], average:[5,10], bad:[1,7], worst:[3,9,11] },
+5:{ excellent:[3,7], good:[1,5,9], average:[6,11], bad:[2,8], worst:[4,10,12] },
+6:{ excellent:[4,8], good:[2,6,10], average:[7,12], bad:[3,9], worst:[1,5,11] },
+7:{ excellent:[5,9], good:[3,7,11], average:[1,8], bad:[4,10], worst:[2,6,12] },
+8:{ excellent:[6,10], good:[4,8,12], average:[2,9], bad:[5,11], worst:[1,3,7] },
+9:{ excellent:[7,11], good:[1,5,9], average:[3,10], bad:[6,12], worst:[2,4,8] },
+10:{ excellent:[8,12], good:[2,6,10], average:[4,11], bad:[1,7], worst:[3,5,9] },
+11:{ excellent:[1,9], good:[3,7,11], average:[5,12], bad:[2,8], worst:[4,6,10] },
+12:{ excellent:[2,10], good:[4,8,12], average:[1,6], bad:[3,9], worst:[5,7,11] }
+
+};
+
+
+
+
 
 
 function getPlanetSign(entity){
@@ -1033,9 +1102,9 @@ reader.onload=()=>{
   window.__lastSwissData=JSON.parse(reader.result);
   drawSIKundali();
   buildSignificatorTable();
+  buildLordshipDecider();
   buildVimshottari();
 };
-
 
 
 
@@ -1310,6 +1379,303 @@ sigPlanets.forEach(p => {
 
 
 
+
+
+
+
+
+
+
+/* ======================================
+   DBA ORDER FROM MOON STAR LORD
+====================================== */
+
+function getDBAOrderFromMoon(){
+
+  if(!window.__lastSwissData) return [];
+
+  const moonAbs = getAbsDeg("Chandra");
+  if(moonAbs == null) return [];
+
+  const nakSize = 360/27;
+  const nakIndex = Math.floor(moonAbs / nakSize);
+
+  const starLord = NAKSHATRA_LORDS[nakIndex];
+
+  const baseOrder = [
+    "Ketu","Venus","Surya","Chandra",
+    "Mangala","Rahu","Jupiter","Saturn","Budha"
+  ];
+
+  const startIndex = baseOrder.indexOf(starLord);
+
+  return [
+    ...baseOrder.slice(startIndex),
+    ...baseOrder.slice(0,startIndex)
+  ];
+}
+
+
+
+
+
+
+
+
+
+
+/* ======================================================
+   BUILD LORDSHIP GOOD OR BAD DECIDER
+====================================================== */
+
+function buildLordshipDecider(){
+
+  const wrap=document.getElementById("lordshipDeciderWrap");
+  if(!wrap) return;
+
+  wrap.innerHTML="";
+
+  if(!window.__lastSwissData) return;
+
+  const pivot=document.getElementById("kundaliPivot").value;
+  const pivotAbs=getShiftedDeg(pivot);
+  if(pivotAbs==null) return;
+
+  let baseSignIndex=Math.floor(pivotAbs/30);
+  const baseSignName=signs[baseSignIndex+1];
+
+
+
+
+
+
+
+
+  const headBar=document.createElement("div");
+headBar.style.display="flex";
+headBar.style.justifyContent="space-between";
+headBar.style.alignItems="center";
+headBar.style.gap="20px";
+headBar.style.flexWrap="wrap";
+
+const title=document.createElement("h2");
+title.textContent="LORDSHIP GOOD OR BAD DECIDER : "+baseSignName.toUpperCase();
+title.style.margin="0";
+
+const label=document.createElement("label");
+label.style.fontWeight="900";
+label.style.color="#d4af37";
+label.style.cursor="pointer";
+
+label.innerHTML=`  <input type="checkbox" id="dbaOrderToggle" checked>
+  DBA Order`;
+
+
+headBar.appendChild(title);
+headBar.appendChild(label);
+
+wrap.appendChild(headBar);
+
+
+
+
+
+
+
+
+
+  const table=document.createElement("table");
+  table.style.width="100%";
+  table.style.borderCollapse="collapse";
+
+  table.innerHTML=`
+  <tr>
+    <th>Planet</th>
+    <th>Lordship</th>
+    <th>Placed In</th>
+    <th>Result</th>
+  </tr>`;
+
+  function houseLord(h){
+    const signIndex=(baseSignIndex+(h-1))%12;
+    const signName=ZODIAC_ORDER[signIndex];
+    return SIGN_LORDS[signName];
+  }
+
+  function evaluateResult(lordHouse, placedHouse){
+
+  lordHouse = parseInt(lordHouse);
+  placedHouse = parseInt(placedHouse);
+
+  if(!lordHouse || !placedHouse) return "-";
+
+  const rule = LORDSHIP_MATRIX[lordHouse];
+  if(!rule) return "-";
+
+  if(rule.excellent.includes(placedHouse)) return "EXCELLENT";
+  if(rule.good.includes(placedHouse)) return "GOOD";
+  if(rule.average.includes(placedHouse)) return "AVERAGE";
+  if(rule.bad.includes(placedHouse)) return "BAD";
+  if(rule.worst.includes(placedHouse)) return "WORST";
+
+  return "-";
+}
+
+
+
+
+
+
+
+
+  for(let h=1;h<=12;h++){
+
+  const planet=houseLord(h);
+  const placedHouse=parseInt(getPlanetHouse(planet));
+
+  const result=evaluateResult(h,placedHouse);
+
+  const tr=document.createElement("tr");
+
+  tr.innerHTML=`
+    <td>${planet}</td>
+    <td>${h}</td>
+    <td>${placedHouse}</td>
+    <td>${result}</td>
+  `;
+
+  table.appendChild(tr);
+}
+
+
+
+
+
+
+
+
+
+
+/* =========================
+   ADD RAHU & KETU (MULTI LORDSHIP SUPPORT)
+========================= */
+
+["Rahu","Ketu"].forEach(node=>{
+
+  const placedHouse=parseInt(getPlanetHouse(node));
+  const sign=getPlanetSign(node);
+  const dispositor=SIGN_LORDS[sign];
+
+  /* find ALL houses owned by dispositor */
+  let lordHouses=[];
+
+  for(let h=1;h<=12;h++){
+    if(houseLord(h)===dispositor){
+      lordHouses.push(h);
+    }
+  }
+
+  if(!lordHouses.length) lordHouses=["-"];
+
+  lordHouses.forEach(lordHouse=>{
+
+    let result="-";
+
+    const rule=LORDSHIP_MATRIX[lordHouse];
+
+    if(rule){
+      if(rule.excellent.includes(placedHouse)) result="EXCELLENT";
+      else if(rule.good.includes(placedHouse)) result="GOOD";
+      else if(rule.average.includes(placedHouse)) result="AVERAGE";
+      else if(rule.bad.includes(placedHouse)) result="BAD";
+      else if(rule.worst.includes(placedHouse)) result="WORST";
+    }
+
+    const tr=document.createElement("tr");
+
+    tr.innerHTML=`
+      <td>${node} (${dispositor})</td>
+      <td>${lordHouse}</td>
+      <td>${placedHouse}</td>
+      <td>${result}</td>
+    `;
+
+    table.appendChild(tr);
+
+  });
+
+});
+
+renderLordshipRows();
+
+function renderLordshipRows(){
+
+  const dba=document.getElementById("dbaOrderToggle")?.checked;
+
+  let rows=[...table.querySelectorAll("tr")].slice(1);
+
+  /* DEFAULT ORDER */
+/* DEFAULT ORDER */
+if(!dba){
+
+  rows.sort((a,b)=>{
+
+    const pa=a.children[0].textContent;
+    const pb=b.children[0].textContent;
+
+    const isRahuA=pa.startsWith("Rahu");
+    const isKetuA=pa.startsWith("Ketu");
+    const isRahuB=pb.startsWith("Rahu");
+    const isKetuB=pb.startsWith("Ketu");
+
+    /* Rahu/Ketu must come AFTER 1-12 */
+    if((isRahuA||isKetuA) && !(isRahuB||isKetuB)) return 1;
+    if(!(isRahuA||isKetuA) && (isRahuB||isKetuB)) return -1;
+
+    /* among Rahu/Ketu keep Rahu first */
+    if(isRahuA && isKetuB) return -1;
+    if(isKetuA && isRahuB) return 1;
+
+    /* normal 1-12 house sorting */
+    const la=parseInt(a.children[1].textContent);
+    const lb=parseInt(b.children[1].textContent);
+
+    return la-lb;
+  });
+
+  rows.forEach(r=>table.appendChild(r));
+  return;
+}
+
+  /* DBA ORDER */
+
+  const order=getDBAOrderFromMoon();
+
+  rows.sort((a,b)=>{
+
+    const pa=a.children[0].textContent.split(" ")[0];
+    const pb=b.children[0].textContent.split(" ")[0];
+
+    const ia=order.indexOf(pa);
+    const ib=order.indexOf(pb);
+
+    if(ia===-1 && ib===-1) return 0;
+    if(ia===-1) return 1;
+    if(ib===-1) return -1;
+
+    return ia-ib;
+  });
+
+  rows.forEach(r=>table.appendChild(r));
+}
+
+setTimeout(()=>{
+  const cb=document.getElementById("dbaOrderToggle");
+  if(cb) cb.onchange=renderLordshipRows;
+},0);
+
+wrap.appendChild(table);
+}
 
 
 
@@ -2250,9 +2616,9 @@ function buildVimshottari(){
   buildFullDasha("lagnaDashaContainer","Lagna");
   buildYoginiDasha("yoginiDashaContainer","Chandra");
   buildYoginiDasha("yoginiDashaContainerLagna","Lagna");
+  buildLordshipDecider();
   setTimeout(highlightTodayVim,0);
 }
-
 
 
 
