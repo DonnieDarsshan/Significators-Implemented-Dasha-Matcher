@@ -1021,13 +1021,17 @@ if(document.getElementById("showCusps")?.checked){
 	  let signIndex=ZODIAC_ORDER.indexOf(sign);
 
 	  /* Aries–Virgo: ascending degree
-		 Libra–Pisces: descending degree */
-	  if(signIndex<=5){
-		buckets[sign].sort((a,b)=>a.deg-b.deg);
-	  }else{
-		buckets[sign].sort((a,b)=>b.deg-a.deg);
-	  }
+	   Libra–Pisces: descending degree */
 
+		function degValue(p){
+		  return (p.deg || 0) + ((p.min || 0)/60);
+		}
+
+		if(signIndex<=5){
+		  buckets[sign].sort((a,b)=>degValue(a)-degValue(b));
+		}else{
+		  buckets[sign].sort((a,b)=>degValue(b)-degValue(a));
+		}
 
 
 
