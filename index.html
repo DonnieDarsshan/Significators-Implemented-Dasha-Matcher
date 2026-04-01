@@ -252,6 +252,9 @@ button{
   <span>Pivot :</span>
   <select id="kundaliPivot"></select>
 
+  <span>Order :</span>
+  <select id="tableSortOrder"></select>
+
   <label><input type="checkbox" id="sign2signMode"> Sign-to-Sign</label>
   <label><input type="checkbox" id="kpMode" checked> KP (0°)</label>
   <label><input type="checkbox" id="vedicMode" > Vedic (15°)</label>
@@ -312,6 +315,14 @@ button{
 
 
 <div id="sixFoldWrap" style="
+  margin-top:30px;
+  width:100%;
+  max-width:1400px;
+  margin-left:auto;
+  margin-right:auto;
+"></div>
+
+<div id="nadiTableWrap" style="
   margin-top:30px;
   width:100%;
   max-width:1400px;
@@ -619,6 +630,33 @@ const NAKSHATRA_LORDS=[
   "Ketu","Venus","Surya","Chandra","Mangala","Rahu","Jupiter","Saturn","Budha",
   "Ketu","Venus","Surya","Chandra","Mangala","Rahu","Jupiter","Saturn","Budha"
 ];
+
+/* ======================================
+   INITIALIZE DROPDOWNS
+====================================== */
+(function(){
+  let sel1 = document.getElementById("kundaliPivot");
+  let sel2 = document.getElementById("kundaliPivotVim");
+  let selOrder = document.getElementById("tableSortOrder");
+
+  const ninePlanets = ["Surya","Chandra","Mangala","Budha","Jupiter","Venus","Saturn","Rahu","Ketu"];
+
+  if(sel1 && sel2){
+    planets.forEach(p => {
+      let o1 = document.createElement("option"); o1.value = o1.text = p; sel1.appendChild(o1);
+      let o2 = document.createElement("option"); o2.value = o2.text = p; sel2.appendChild(o2);
+    });
+    sel1.value = "Lagna";
+    sel2.value = "Lagna";
+  }
+
+  if(selOrder){
+    const defaultDasha = ["Ketu","Venus","Surya","Chandra","Mangala","Rahu","Jupiter","Saturn","Budha"];
+    defaultDasha.forEach(p => {
+      let o3 = document.createElement("option"); o3.value = o3.text = p; selOrder.appendChild(o3);
+    });
+  }
+})();
 
 
 
@@ -1369,6 +1407,16 @@ if(document.getElementById("showCusps")?.checked){
 	});
 }
 
+
+
+
+
+
+
+
+
+
+
 function loadSwissJSON(){
   const input=document.createElement("input");
   input.type="file";
@@ -1376,21 +1424,81 @@ function loadSwissJSON(){
 
   input.onchange=e=>{
     const reader=new FileReader();
-	
-	
-	
-	
-reader.onload=()=>{
-  window.__lastSwissData=JSON.parse(reader.result);
-  window.__lastMixerSelection = null; // Resets mixer to running dasha for new chart
-  drawSIKundali();
-  buildSignificatorTable();
-  buildLordshipDecider();
-  buildVimshottari();
-};
+    
+    reader.onload=()=>{
+      // 1. HARD RESET ALL OVERRIDES, SHIFTS & STATE VARIABLES
+      window.__manualOrderOverride = null; 
+      window.__lastMixerSelection = null; 
+      window.__fourFoldState = false; // Resets 4-Fold Significators Toggle to OFF
+      window.__mixerUntenantedState = true; // Resets Mixer Untenanted Toggle
+      VIM_CALIB_OFFSET_DAYS = 0; // Resets the Days Calibration shift
+      USE_KN_VIM = true; // Resets Kannada translation state
+      window.__lastSwissData = JSON.parse(reader.result);
 
+      // 2. HARD RESET ALL DROPDOWNS & TEXT FIELDS
+      let sel1 = document.getElementById("kundaliPivot");
+      let sel2 = document.getElementById("kundaliPivotVim");
+      if(sel1) sel1.value = "Lagna";
+      if(sel2) sel2.value = "Lagna";
 
+      let expandLvl = document.getElementById("vimExpandLevel");
+      if(expandLvl) expandLvl.value = "3"; // Default is ANTARA
 
+      let calibStep = document.getElementById("vimCalibStep");
+      if(calibStep) calibStep.value = "60"; // Default is 2 months
+
+      let divTemp = document.getElementById("dividerTemplate");
+      if(divTemp) divTemp.value = "manual";
+
+      // Clear the Dasha Divider number fields
+      ["dividerPos", "dividerSupport", "dividerNeg"].forEach(id => {
+        let el = document.getElementById(id);
+        if(el) el.value = "";
+      });
+
+      // 3. HARD RESET ALL CHECKBOXES TO THEIR ORIGINAL HTML STATE
+      const defaultCheckedIds = [
+        "kpMode", "originalASC", "showCusps", "trueNode", 
+        "useConjCusps", "ignoreRaKeLords", "hideVimDates", 
+        "useMonthNames", "knVimToggle", "birthStartToggle", 
+        "showAgeYears", "hideBhuktiAge"
+      ];
+      
+      const defaultUncheckedIds = [
+        "sign2signMode", "vedicMode", "useConjPlanets", 
+        "useAspects", "includeRaKeCuspal", "splitSig", "splitSig2", 
+        "ignoreUntenanted", "hideAntaraRest"
+      ];
+
+      defaultCheckedIds.forEach(id => {
+        let el = document.getElementById(id);
+        if(el) el.checked = true;
+      });
+
+      defaultUncheckedIds.forEach(id => {
+        let el = document.getElementById(id);
+        if(el) el.checked = false;
+      });
+
+      // 4. BUILD ORDER DROPDOWN FRESH FROM NEW MOON
+      let selOrder = document.getElementById("tableSortOrder");
+      let dbaOrder = getDBAOrderFromMoon();
+      if(selOrder && dbaOrder.length) {
+        selOrder.innerHTML = "";
+        dbaOrder.forEach(p => {
+          let opt = document.createElement("option"); opt.value = opt.text = p; selOrder.appendChild(opt);
+        });
+      }
+
+      // 5. REDRAW EVERYTHING WITH FRESH DATA
+      drawSIKundali();
+      buildSignificatorTable();
+     buildLordshipDecider();
+      buildSixFoldTables(); 
+      buildNadiTables(); // <-- ADD THIS LINE
+      buildVimshottari();
+      setVimToday(); // Resets the Current Transit date picker to today's date
+    };
 
     reader.readAsText(e.target.files[0]);
   };
@@ -1398,38 +1506,100 @@ reader.onload=()=>{
   input.click();
 }
 
-(function(){
-  let sel1=document.getElementById("kundaliPivot");
-  let sel2=document.getElementById("kundaliPivotVim");
-
-  planets.forEach(p=>{
-    let o1=document.createElement("option");
-    o1.value=o1.text=p;
-    sel1.appendChild(o1);
-
-    let o2=document.createElement("option");
-    o2.value=o2.text=p;
-    sel2.appendChild(o2);
-  });
-
-  sel1.value="Lagna";
-  sel2.value="Lagna";
-})();
 
 
+
+
+
+
+
+
+
+// --- SYNCHRONIZED DROPDOWN LOGIC ---
 document.getElementById("kundaliPivot").addEventListener("change", (e) => {
   document.getElementById("kundaliPivotVim").value = e.target.value;
+  const ninePlanets = ["Surya","Chandra","Mangala","Budha","Jupiter","Venus","Saturn","Rahu","Ketu"];
+  if(ninePlanets.includes(e.target.value)) {
+    window.__manualOrderOverride = e.target.value;
+  } else {
+    window.__manualOrderOverride = null; // Revert to DBA default if Lagna/CSL is chosen
+  }
   drawSIKundali();
   buildSignificatorTable();
+  buildLordshipDecider();
+  buildSixFoldTables();
+  buildNadiTables(); // <-- ADD THIS LINE
   buildVimshottari();
 });
 
 document.getElementById("kundaliPivotVim").addEventListener("change", (e) => {
   document.getElementById("kundaliPivot").value = e.target.value;
+  const ninePlanets = ["Surya","Chandra","Mangala","Budha","Jupiter","Venus","Saturn","Rahu","Ketu"];
+  if(ninePlanets.includes(e.target.value)) {
+    window.__manualOrderOverride = e.target.value;
+  } else {
+    window.__manualOrderOverride = null;
+  }
   drawSIKundali();
   buildSignificatorTable();
+  buildLordshipDecider();
+  buildSixFoldTables();
+  buildNadiTables(); // <-- ADD THIS LINE
   buildVimshottari();
 });
+
+document.getElementById("tableSortOrder").addEventListener("change", (e) => {
+  window.__manualOrderOverride = e.target.value;
+  buildSignificatorTable();
+  buildSixFoldTables();
+  buildNadiTables(); // <-- ADD THIS LINE
+  buildLordshipDecider();
+  
+  // Restore focus to keep keyboard navigation active
+  setTimeout(() => {
+    let restoredSelect = document.getElementById("tableSortOrder");
+    if(restoredSelect) restoredSelect.focus();
+  }, 0);
+});
+
+// Keyboard Infinite Scrolling for Order Dropdown
+document.getElementById("tableSortOrder").addEventListener("keydown", (e) => {
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault(); // Stop default browser scrolling
+    
+    let select = e.target;
+    let currentIndex = select.selectedIndex;
+    let total = select.options.length;
+
+    if (e.key === "ArrowDown") {
+      currentIndex = (currentIndex + 1) % total; // Loop to top
+    } else if (e.key === "ArrowUp") {
+      currentIndex = (currentIndex - 1 + total) % total; // Loop to bottom
+    }
+
+    select.selectedIndex = currentIndex;
+    window.__manualOrderOverride = select.value;
+    
+    buildSignificatorTable();
+    buildSixFoldTables();
+    buildNadiTables(); // <-- ADD THIS LINE
+    buildLordshipDecider();
+
+    // Restore focus immediately after table redraw so you can keep typing
+    setTimeout(() => {
+      let restoredSelect = document.getElementById("tableSortOrder");
+      if(restoredSelect) restoredSelect.focus();
+    }, 0);
+  }
+});
+
+
+
+
+
+
+
+
   
   
  document.getElementById("originalASC")
@@ -1443,22 +1613,32 @@ document.getElementById("kundaliPivotVim").addEventListener("change", (e) => {
 document.getElementById("showCusps")
   .addEventListener("change",drawSIKundali);
 
+
+
 document.getElementById("trueNode")
   ?.addEventListener("change", () => {
     drawSIKundali();
     buildSignificatorTable();
     buildLordshipDecider();
+    buildSixFoldTables(); // <-- Added
+    buildNadiTables();    // <-- Added
     buildVimshottari();
   });
-
-
 
 ["useConjPlanets","useAspects","useConjCusps","ignoreRaKeLords","includeRaKeCuspal","ignoreUntenanted"].forEach(id=>{
   document.getElementById(id).addEventListener("change",()=>{
     buildSignificatorTable();
+    buildSixFoldTables(); // <-- Added
+    buildNadiTables();    // <-- Added
     buildVimshottari();
   });
 });
+
+
+
+
+
+
 
 document.getElementById("splitSig").addEventListener("change",()=>{
   if(document.getElementById("splitSig").checked){
@@ -1502,43 +1682,38 @@ function buildSignificatorTable(){
   container.innerHTML = "";
  
 
-let sigPlanets = planets.filter(p =>
-  p !== "Lagna" && !p.includes("CSL")
-);
-
-/* ======================================
-   SORT BY DBA ORDER FROM MOON STAR LORD
-====================================== */
+let sigPlanets = ["Surya","Chandra","Mangala","Budha","Jupiter","Venus","Saturn","Rahu","Ketu"];
 
 let dbaOrder = getDBAOrderFromMoon();
 
+// 1. Sort primarily by DBA
 if(dbaOrder.length){
-
   sigPlanets.sort((a,b)=>{
-
     let ia = dbaOrder.indexOf(a);
     let ib = dbaOrder.indexOf(b);
-
     if(ia===-1 && ib===-1) return 0;
     if(ia===-1) return 1;
     if(ib===-1) return -1;
-
     return ia-ib;
   });
-
 }
 
-let pivot = document.getElementById("kundaliPivot").value;
-
-if(pivot !== "Lagna"){
-  let idx = sigPlanets.indexOf(pivot);
-  if(idx !== -1){
-    sigPlanets = [
-      ...sigPlanets.slice(idx),
-      ...sigPlanets.slice(0,idx)
-    ];
-  }
+// 2. Identify primary planet (either default DBA or user Override)
+let primaryPlanet = sigPlanets[0];
+if (window.__manualOrderOverride && sigPlanets.includes(window.__manualOrderOverride)) {
+  primaryPlanet = window.__manualOrderOverride;
 }
+
+// 3. Cycle the entire array in proper DBA order starting from the primary planet
+const baseDashaForSig = ["Ketu","Venus","Surya","Chandra","Mangala","Rahu","Jupiter","Saturn","Budha"];
+let shiftIndexSig = baseDashaForSig.indexOf(primaryPlanet);
+if(shiftIndexSig !== -1) {
+  sigPlanets = [...baseDashaForSig.slice(shiftIndexSig), ...baseDashaForSig.slice(0, shiftIndexSig)];
+}
+
+// 4. Visually update the Order Dropdown 
+let selOrder = document.getElementById("tableSortOrder");
+if(selOrder) selOrder.value = primaryPlanet;
 
 sigPlanets.forEach(p => {
 
@@ -1749,7 +1924,172 @@ function getDBAOrderFromMoon(){
 
 
 
+function getPlanetHouseAbsolute(entity){
 
+  let abs = getAbsDeg(entity);
+  if(abs == null) return "";
+
+  const data = window.__lastSwissData;
+  if(!data || !data.cusps) return "";
+
+  for(let i = 1; i <= 12; i++){
+    let current = data.cusps[i];
+    let next = data.cusps[i === 12 ? 1 : i + 1];
+
+    if(current < next){
+      if(abs >= current && abs < next) return i;
+    } else {
+      if(abs >= current || abs < next) return i;
+    }
+  }
+
+  return "";
+}
+
+
+
+
+
+
+
+function rotateHouseList(list){
+
+  if(!list.length) return [];
+
+  let pivot = document.getElementById("kundaliPivot").value;
+
+  // 🔥 FORCE correct house calculation (same as UI)
+  let pivotHouse = getPlanetHouseAbsolute(pivot);
+
+  if(!pivotHouse) return list;
+
+  pivotHouse = parseInt(pivotHouse);
+
+  let rotated = list.map(h => ((h - pivotHouse + 12) % 12) + 1);
+
+  // 🔥 SORT after rotation (IMPORTANT)
+  return rotated.sort((a,b)=>a-b);
+}
+
+
+
+function getCuspsSubbedBy(planet) {
+  let res = [];
+  for(let i = 1; i <= 12; i++){
+    if(getSubLord(i + " CSL") === planet){
+      res.push(i);
+    }
+  }
+
+  let rotated = rotateHouseList(res);
+
+  return rotated.length ? rotated.join(", ") : "";
+}
+
+
+
+// NEW: Helper function to find Cusps where Planet is Star Lord
+function getCuspsStarredBy(planet) {
+  let res = [];
+  for(let i = 1; i <= 12; i++){
+    if(getStarLord(i + " CSL") === planet){
+      res.push(i);
+    }
+  }
+
+  let rotated = rotateHouseList(res);
+
+  return rotated.length ? rotated.join(", ") : "";
+}
+
+
+
+// NEW: Helper function to find Cusps where Planet is Sub-Sub Lord
+function getCuspsSubSubbedBy(planet) {
+  let res = [];
+  for(let i = 1; i <= 12; i++){
+    if(getSubSubLord(i + " CSL") === planet){
+      res.push(i);
+    }
+  }
+
+  let rotated = rotateHouseList(res);
+
+  return rotated.length ? rotated.join(", ") : "";
+}
+
+
+
+
+
+
+  
+
+
+  // NEW: Mathematical logic to calculate Sub-Sub Lord
+  function getSubSubLord(entity){
+    let abs = getAbsDeg(entity);
+    if(abs === null) return "";
+
+    let nakSize = 360 / 27; 
+    let nakIndex = Math.floor(abs / nakSize);
+    let nakLord = NAKSHATRA_LORDS[nakIndex];
+
+    let startIdx = DASHA_ORDER.indexOf(nakLord);
+    let order = [...DASHA_ORDER.slice(startIdx), ...DASHA_ORDER.slice(0, startIdx)];
+
+    let degInNak = abs - (nakIndex * nakSize);
+    let currentDeg = 0;
+
+    for(let i = 0; i < 9; i++){
+      let subLord = order[i];
+      let subSize = (DASHA_YEARS[subLord] / 120) * nakSize;
+      
+      if(degInNak <= currentDeg + subSize + 0.000001){
+         // We are inside the Sub Lord, now calculate the Sub-Sub
+         let subStartIdx = DASHA_ORDER.indexOf(subLord);
+         let ssOrder = [...DASHA_ORDER.slice(subStartIdx), ...DASHA_ORDER.slice(0, subStartIdx)];
+         
+         let degInSub = degInNak - currentDeg;
+         let ssCurrentDeg = 0;
+         for(let j = 0; j < 9; j++){
+            let ssLord = ssOrder[j];
+            let ssSize = (DASHA_YEARS[ssLord] / 120) * subSize;
+            if(degInSub <= ssCurrentDeg + ssSize + 0.000001) {
+               return ssLord;
+            }
+            ssCurrentDeg += ssSize;
+         }
+         return subLord; // fallback
+      }
+      currentDeg += subSize;
+    }
+    return "";
+  }
+
+
+  
+  
+
+
+  function getShort(p) {
+    if(!p) return "";
+    const map = {
+      "Surya": "Sury", "Chandra": "Chan", "Mangala": "Kuja", "Budha": "Bud",
+      "Jupiter": "Jup", "Venus": "Ven", "Saturn": "Sat", "Rahu": "Rah", "Ketu": "Ket"
+    };
+    return map[p] || p;
+  }
+
+  function getCuspSignLord(h) {
+    let pivot = document.getElementById("kundaliPivot").value;
+    let pivotAbs = getShiftedDeg(pivot);
+    if(pivotAbs == null) return "";
+    let baseSignIndex = Math.floor(pivotAbs / 30);
+    let signIndex = (baseSignIndex + (h - 1)) % 12;
+    let signName = ZODIAC_ORDER[signIndex];
+    return SIGN_LORDS[signName] || "";
+  }
 
 
 
@@ -1769,6 +2109,7 @@ function buildSixFoldTables() {
 
   let ninePlanets = ["Surya","Chandra","Mangala","Budha","Jupiter","Venus","Saturn","Rahu","Ketu"]; 
   let dbaOrder = getDBAOrderFromMoon();
+  
   if(dbaOrder.length){
     ninePlanets.sort((a,b)=>{
       let ia = dbaOrder.indexOf(a);
@@ -1778,6 +2119,19 @@ function buildSixFoldTables() {
       if(ib===-1) return -1;
       return ia-ib;
     });
+  } 
+
+  // Apply the same logic used in Significators Table
+  let primaryPlanet = ninePlanets[0];
+  if (window.__manualOrderOverride && ninePlanets.includes(window.__manualOrderOverride)) {
+    primaryPlanet = window.__manualOrderOverride;
+  }
+
+  // Cycle the entire array in proper DBA order starting from the primary planet
+  const baseDashaForSixFold = ["Ketu","Venus","Surya","Chandra","Mangala","Rahu","Jupiter","Saturn","Budha"];
+  let shiftIndex = baseDashaForSixFold.indexOf(primaryPlanet);
+  if(shiftIndex !== -1) {
+     ninePlanets = [...baseDashaForSixFold.slice(shiftIndex), ...baseDashaForSixFold.slice(0, shiftIndex)];
   } 
 
   // --- MAIN COLLAPSIBLE HEADING & TOGGLES ---
@@ -1799,9 +2153,9 @@ function buildSixFoldTables() {
   mainTitle.style.letterSpacing = "1px";
   mainTitle.style.cursor = "pointer";
 
-  // --- Default 4-Fold to ON ---
+  // --- Default 4-Fold to OFF ---
   if (typeof window.__fourFoldState === 'undefined') {
-    window.__fourFoldState = true;
+    window.__fourFoldState = false;
   }
 
   // 4 Fold Significators Toggle
@@ -1817,6 +2171,7 @@ function buildSixFoldTables() {
   fourFoldLabel.querySelector("input").addEventListener("change", (e) => {
     window.__fourFoldState = e.target.checked;
     buildSixFoldTables(); // Redraw tables when toggled
+    buildNadiTables(); // Redraw Nadi tables
   });
 
   // ONLY attach the title to the header wrap so it stays visible
@@ -1834,35 +2189,28 @@ function buildSixFoldTables() {
     mainContainer.style.display = mainContainer.style.display === "none" ? "block" : "none";
   };
 
-  // Helper functions
-  function getCuspsSubbedBy(planet) {
-    let res = [];
-    for(let i = 1; i <= 12; i++){
-      if(getSubLord(i + " CSL") === planet){
-        res.push(i);
-      }
-    }
-    return res.join(", ") || "";
-  }
-  
-  function getShort(p) {
-    if(!p) return "";
-    const map = {
-      "Surya": "Sury", "Chandra": "Chan", "Mangala": "Kuja", "Budha": "Bud",
-      "Jupiter": "Jup", "Venus": "Ven", "Saturn": "Sat", "Rahu": "Rah", "Ketu": "Ket"
-    };
-    return map[p] || p;
-  }
 
-  function getCuspSignLord(h) {
-    let pivot = document.getElementById("kundaliPivot").value;
-    let pivotAbs = getShiftedDeg(pivot);
-    if(pivotAbs == null) return "";
-    let baseSignIndex = Math.floor(pivotAbs / 30);
-    let signIndex = (baseSignIndex + (h - 1)) % 12;
-    let signName = ZODIAC_ORDER[signIndex];
-    return SIGN_LORDS[signName] || "";
-  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // ==========================================
   // 1. PLANET WISE TABLES (Original + Mixed)
@@ -1881,16 +2229,19 @@ function buildSixFoldTables() {
   pTable.style.marginBottom = "30px";
   pTable.style.background = "#010a08";
 
+  // UPDATED: Shorter Header Names & 2 New Columns added
   pTable.innerHTML = `
     <tr>
       <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#fb923c;">Planets</th>
       <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#ffff00;">SubL In House</th>
       <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#38bdf8;">NakL in House</th>
       <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#38bdf8;">Plt In House</th>
-      <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#ffff00;">SubL is Sgl of Houses</th>
-      <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#38bdf8;">NakL is Sgl of Houses</th>
-      <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#38bdf8;">Sign Lord of the Houses</th>
-      <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#ffff00;">Sub Lord of the Houses</th>
+      <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#ffff00;">SubL is Sgl</th>
+      <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#38bdf8;">NakL is Sgl</th>
+      <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#38bdf8;">Sign Lord</th>
+      <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#ffff00;">Sub Lord</th>
+      <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#f472b6;">Sub-Sub</th>
+      <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#a855f7;">Starlords</th>
     </tr>
   `;
 
@@ -1925,13 +2276,24 @@ function buildSixFoldTables() {
     let pltInHouse = getPlanetHouse(p);
     let sublSgl = (subLord === "Rahu" || subLord === "Ketu" || !subLord) ? "" : getLordsOf(subLord);
     let naklSgl = (nakLord === "Rahu" || nakLord === "Ketu" || !nakLord) ? "" : getLordsOf(nakLord);
+    
+	
+	
+	
+	
+	
+	// Original & New Calculations
     let signLordOfHouses = (p === "Rahu" || p === "Ketu") ? "" : getLordsOf(p);
     let subLordOfHouses = getCuspsSubbedBy(p);
+    let subSubOfHouses = getCuspsSubSubbedBy(p);
+    let starOfHouses = getCuspsStarredBy(p);
 
     // If 4-Fold is toggled, these values become empty for display and mixing
     let dispSublInHouse = window.__fourFoldState ? "" : sublInHouse;
     let dispSublSgl = window.__fourFoldState ? "" : sublSgl;
     let dispSubLordOfHouses = window.__fourFoldState ? "" : subLordOfHouses;
+    let dispSubSubOfHouses = window.__fourFoldState ? "" : subSubOfHouses;
+    let dispStarOfHouses = window.__fourFoldState ? "" : starOfHouses; // <-- NEW: Hides Starlords
 
     let clean = (val) => val === "" || val === "-" ? "" : val;
 
@@ -1946,9 +2308,12 @@ function buildSixFoldTables() {
       <td style="border:1px solid #10b981; padding:6px; text-align:center; font-weight:500;">${clean(naklSgl)}</td>
       <td style="border:1px solid #10b981; padding:6px; text-align:center; font-weight:500;">${clean(signLordOfHouses)}</td>
       <td style="border:1px solid #10b981; padding:6px; text-align:center; font-weight:500; color:#ffff00;">${clean(dispSubLordOfHouses)}</td>
+      <td style="border:1px solid #10b981; padding:6px; text-align:center; font-weight:500; color:#f472b6;">${clean(dispSubSubOfHouses)}</td>
+      <td style="border:1px solid #10b981; padding:6px; text-align:center; font-weight:500; color:#a855f7;">${clean(dispStarOfHouses)}</td>
     `;
     pTable.appendChild(tr);
 
+ 
     // 2. Mixed Table Row Calculation 
     let mixedArray = [dispSublInHouse, naklInHouse, pltInHouse, dispSublSgl, naklSgl, signLordOfHouses];
     let numsList = [];
@@ -1989,6 +2354,18 @@ function buildSixFoldTables() {
     `;
     pTableMixed.appendChild(trMixed);
   });
+
+
+
+
+
+
+
+
+
+
+
+
 
 
   // ==========================================
@@ -2138,6 +2515,165 @@ function buildSixFoldTables() {
 
   wrap.appendChild(mainContainer);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ======================================================
+   BUILD SIX FOLD NAKSHATRA NADI TABLE
+====================================================== */
+function buildNadiTables() {
+  const wrap = document.getElementById("nadiTableWrap");
+  if(!wrap) return;
+  wrap.innerHTML = "";
+  if(!window.__lastSwissData) return;
+
+  let ninePlanets = ["Surya","Chandra","Mangala","Budha","Jupiter","Venus","Saturn","Rahu","Ketu"];
+  let dbaOrder = getDBAOrderFromMoon();
+
+  if(dbaOrder.length){
+    ninePlanets.sort((a,b)=>{
+      let ia = dbaOrder.indexOf(a);
+      let ib = dbaOrder.indexOf(b);
+      if(ia===-1 && ib===-1) return 0;
+      if(ia===-1) return 1;
+      if(ib===-1) return -1;
+      return ia-ib;
+    });
+  }
+
+  let primaryPlanet = ninePlanets[0];
+  if (window.__manualOrderOverride && ninePlanets.includes(window.__manualOrderOverride)) {
+    primaryPlanet = window.__manualOrderOverride;
+  }
+
+  const baseDashaForSixFold = ["Ketu","Venus","Surya","Chandra","Mangala","Rahu","Jupiter","Saturn","Budha"];
+  let shiftIndex = baseDashaForSixFold.indexOf(primaryPlanet);
+  if(shiftIndex !== -1) {
+     ninePlanets = [...baseDashaForSixFold.slice(shiftIndex), ...baseDashaForSixFold.slice(0, shiftIndex)];
+  }
+
+  const title = document.createElement("h2");
+  title.innerHTML = "SIX FOLD NAKSHATRA NADI TABLE <span style='font-size:18px;'>▼</span>";
+  title.style.margin = "0 0 15px 0";
+  title.style.fontSize = "26px";
+  title.style.fontWeight = "500";
+  title.style.textAlign = "left";
+  title.style.background = "linear-gradient(90deg,#10b981,#38bdf8)";
+  title.style.webkitBackgroundClip = "text";
+  title.style.webkitTextFillColor = "transparent";
+  title.style.letterSpacing = "1px";
+  title.style.cursor = "pointer";
+  
+  const mainContainer = document.createElement("div");
+  mainContainer.style.display = "block";
+  mainContainer.style.width = "100%";
+
+  title.onclick = () => {
+    mainContainer.style.display = mainContainer.style.display === "none" ? "block" : "none";
+  };
+
+  wrap.appendChild(title);
+  wrap.appendChild(mainContainer);
+
+  let clean = (val) => val === "" || val === "-" ? "" : val;
+
+  function generateNadiRowHTML(label, p, labelColor) {
+    if(!p) return `<tr><td colspan="10" style="border:1px solid #10b981; padding:6px; text-align:center; color:#555;">No ${label}</td></tr>`;
+
+    let subLord = getSubLord(p);
+    let nakLord = getStarLord(p);
+
+    let sublInHouse = subLord ? getPlanetHouse(subLord) : "";
+    let naklInHouse = nakLord ? getPlanetHouse(nakLord) : "";
+    let pltInHouse = getPlanetHouse(p);
+    let sublSgl = (subLord === "Rahu" || subLord === "Ketu" || !subLord) ? "" : getLordsOf(subLord);
+    let naklSgl = (nakLord === "Rahu" || nakLord === "Ketu" || !nakLord) ? "" : getLordsOf(nakLord);
+
+    let signLordOfHouses = (p === "Rahu" || p === "Ketu") ? "" : getLordsOf(p);
+    let subLordOfHouses = getCuspsSubbedBy(p);
+    let subSubOfHouses = getCuspsSubSubbedBy(p);
+    let starOfHouses = getCuspsStarredBy(p);
+
+    // Apply 4-Fold hiding logic exactly like the main table
+    let dispSublInHouse = window.__fourFoldState ? "" : sublInHouse;
+    let dispSublSgl = window.__fourFoldState ? "" : sublSgl;
+    let dispSubLordOfHouses = window.__fourFoldState ? "" : subLordOfHouses;
+    let dispSubSubOfHouses = window.__fourFoldState ? "" : subSubOfHouses;
+    let dispStarOfHouses = window.__fourFoldState ? "" : starOfHouses;
+
+    let displayLabel = getPlanetLabel(p);
+    let entityText = displayLabel; // <-- Simplified to just show the Planet name
+
+    return `
+      <tr>
+        <td style="border:1px solid #10b981; padding:6px; text-align:center; font-weight:900; color:${labelColor};">${entityText}</td>
+        <td style="border:1px solid #10b981; padding:6px; text-align:center; font-weight:500; color:#ffff00;">${clean(dispSublInHouse)}</td>
+        <td style="border:1px solid #10b981; padding:6px; text-align:center; font-weight:500;">${clean(naklInHouse)}</td>
+        <td style="border:1px solid #10b981; padding:6px; text-align:center; font-weight:500;">${clean(pltInHouse)}</td>
+        <td style="border:1px solid #10b981; padding:6px; text-align:center; font-weight:500; color:#ffff00;">${clean(dispSublSgl)}</td>
+        <td style="border:1px solid #10b981; padding:6px; text-align:center; font-weight:500;">${clean(naklSgl)}</td>
+        <td style="border:1px solid #10b981; padding:6px; text-align:center; font-weight:500;">${clean(signLordOfHouses)}</td>
+        <td style="border:1px solid #10b981; padding:6px; text-align:center; font-weight:500; color:#ffff00;">${clean(dispSubLordOfHouses)}</td>
+        <td style="border:1px solid #10b981; padding:6px; text-align:center; font-weight:500; color:#f472b6;">${clean(dispSubSubOfHouses)}</td>
+        <td style="border:1px solid #10b981; padding:6px; text-align:center; font-weight:500; color:#a855f7;">${clean(dispStarOfHouses)}</td>
+      </tr>
+    `;
+  }
+
+  ninePlanets.forEach(p => {
+    let starLord = getStarLord(p);
+    let subLord = getSubLord(p);
+    let subSubLord = getSubSubLord(p);
+
+    let box = document.createElement("div");
+    box.style.border = "1px solid #10b981";
+    box.style.background = "#010a08";
+    box.style.color = "#ecfdf5";
+    box.style.padding = "10px";
+    box.style.marginBottom = "20px";
+    box.style.width = "100%";
+
+    box.innerHTML = `
+      <div style="font-weight:900;font-size:22px;text-align:center;margin-bottom:6px;color:#d4af37">
+        ${getPlanetLabel(p)} Significator
+      </div>
+      <table style="width:100%; border-collapse:collapse; text-align:center; margin-bottom:10px;">
+        <tr>
+          <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#fb923c;">Entity</th>
+          <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#ffff00;">SubL In House</th>
+          <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#38bdf8;">NakL in House</th>
+          <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#38bdf8;">Plt In House</th>
+          <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#ffff00;">SubL is Sgl</th>
+          <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#38bdf8;">NakL is Sgl</th>
+          <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#38bdf8;">Sign Lord</th>
+          <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#ffff00;">Sub Lord</th>
+          <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#f472b6;">Sub-Sub</th>
+          <th style="border:1px solid #10b981; padding:6px; font-weight:900; color:#a855f7;">Starlords</th>
+        </tr>
+        ${generateNadiRowHTML("Planet", p, "#fb923c")}
+        ${generateNadiRowHTML("Star Lord", starLord, "#a855f7")}
+        ${generateNadiRowHTML("Sub Lord", subLord, "#ffff00")}
+        ${generateNadiRowHTML("Sub-Sub", subSubLord, "#f472b6")}
+      </table>
+    `;
+    
+    mainContainer.appendChild(box);
+  });
+}
+
 
 
 
