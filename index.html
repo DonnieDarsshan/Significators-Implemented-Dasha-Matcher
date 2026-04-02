@@ -258,6 +258,7 @@ button{
   <label><input type="checkbox" id="sign2signMode"> Sign-to-Sign</label>
   <label><input type="checkbox" id="kpMode" checked> KP (0°)</label>
   <label><input type="checkbox" id="vedicMode" > Vedic (15°)</label>
+  <label><input type="checkbox" id="equalMode" checked> Equal</label>
   <label><input type="checkbox" id="originalASC" checked> Original ASC</label>
   <label><input type="checkbox" id="showCusps" checked> Show Cusps</label>
   <label><input type="checkbox" id="trueNode" checked> True Node</label>
@@ -774,6 +775,23 @@ const LORDSHIP_MATRIX = {
 
 
 
+/* ======================================
+   CUSP CALCULATION ENGINE
+====================================== */
+function getCuspAbsolute(cuspNum) {
+  const data = window.__lastSwissData;
+  if (!data) return null;
+  
+  if (document.getElementById("equalMode")?.checked) {
+    if (data.lagna == null) return null;
+    // Calculate equal 30-degree slices from Lagna
+    return (data.lagna + (cuspNum - 1) * 30) % 360;
+  }
+  
+  // Default Placidus from JSON
+  return data.cusps ? data.cusps[cuspNum] : null;
+}
+
 function getPlanetSign(entity){
   let abs=getAbsDeg(entity);
   if(abs==null) return "";
@@ -809,10 +827,12 @@ function getPlanetHouse(entity){
     return ((planetSign - baseSign + 12) % 12) + 1;
   }
 
-  // 2. Exact Cuspal Mode (KP) -> Compare absolute degrees against Cusp boundaries
+  // 2. Exact Cuspal Mode (KP/Equal) -> Compare absolute degrees against Cusp boundaries
   for(let i = 1; i <= 12; i++){
-    let currentCusp = data.cusps[i];
-    let nextCusp = data.cusps[i === 12 ? 1 : i + 1];
+    let currentCusp = getCuspAbsolute(i);
+    let nextCusp = getCuspAbsolute(i === 12 ? 1 : i + 1);
+
+    if (currentCusp == null || nextCusp == null) return "";
 
     if(currentCusp < nextCusp){
       // Normal cusp span (e.g., Capricorn 290° to Aquarius 319°)
@@ -976,13 +996,15 @@ function getCuspalConjunct(entity){
   if(abs==null) return "-";
 
   const data=window.__lastSwissData;
-  if(!data || !data.cusps) return "-";
+  if(!data || (!data.cusps && !document.getElementById("equalMode")?.checked)) return "-";
 
   let result=[];
 
-  Object.keys(data.cusps).forEach(c=>{
-    let cuspAbs=data.cusps[c];
-    if(typeof cuspAbs!=="number") return;
+  for(let i=1; i<=12; i++){
+    let cuspAbs = getCuspAbsolute(i);
+    let c = i.toString();
+    
+    if(typeof cuspAbs!=="number") continue;
 
     let shifted=(cuspAbs+getGlobalOffset()+360)%360;
 
@@ -992,7 +1014,7 @@ function getCuspalConjunct(entity){
     if(diff<=3){
       result.push(c);
     }
-  });
+  }
 
   return result.join(",") || "-";
 }
@@ -1115,8 +1137,9 @@ function getAbsDeg(entity){
 
   if(entity.endsWith(" CSL")){
     let num=parseInt(entity);
-    if(data.cusps && data.cusps[num]!=null){
-      return data.cusps[num];
+    let cAbs = getCuspAbsolute(num);
+    if(cAbs != null){
+      return cAbs;
     }
   }
 
@@ -1193,6 +1216,15 @@ sign2signMode.onchange=()=>{enforceMode("sign");buildSignificatorTable();buildVi
 kpMode.onchange=()=>{enforceMode("kp");buildSignificatorTable();buildVimshottari();};
 vedicMode.onchange=()=>{enforceMode("vedic");buildSignificatorTable();buildVimshottari();};
 
+document.getElementById("equalMode")?.addEventListener("change", () => {
+  drawSIKundali();
+  buildSignificatorTable();
+  buildLordshipDecider();
+  buildSixFoldTables();
+  buildNadiTables();
+  buildVimshottari();
+});
+
 
 function drawSIKundali(){
 
@@ -1261,7 +1293,7 @@ function drawSIKundali(){
 if(document.getElementById("showCusps")?.checked){
 
   const data = window.__lastSwissData;
-  if(!data || !data.cusps) return;
+  if(!data || (!data.cusps && !document.getElementById("equalMode")?.checked)) return;
 
   // use SAME offset as planets (fixes Original ASC / KP / Vedic)
   let offset = getGlobalOffset();
@@ -1269,7 +1301,7 @@ if(document.getElementById("showCusps")?.checked){
   for(let i=0;i<12;i++){
 
     let cuspNum = i + 1;
-    let cuspAbs = data.cusps[cuspNum];
+    let cuspAbs = getCuspAbsolute(cuspNum);
 
     if(typeof cuspAbs !== "number") continue;
 
@@ -1431,6 +1463,11 @@ function loadSwissJSON(){
       window.__lastMixerSelection = null; 
       window.__fourFoldState = false; // Resets 4-Fold Significators Toggle to OFF
       window.__mixerUntenantedState = true; // Resets Mixer Untenanted Toggle
+      window.__mixerStarlordOnlyState = false; // Resets Mixer Starlord Only Toggle
+      window.__mixerFourFoldState = true; // Resets Mixer 4-Fold Toggle (ON by Default)
+      window.__mixerAddDispositorState = true; // <-- NEW: Resets Add Dispositor to ON
+      window.__sixFoldExpanded = false; // Resets Six Fold open state
+      window.__nadiExpanded = false;    // Resets Nadi open state
       VIM_CALIB_OFFSET_DAYS = 0; // Resets the Days Calibration shift
       USE_KN_VIM = true; // Resets Kannada translation state
       window.__lastSwissData = JSON.parse(reader.result);
@@ -1461,7 +1498,7 @@ function loadSwissJSON(){
         "kpMode", "originalASC", "showCusps", "trueNode", 
         "useConjCusps", "ignoreRaKeLords", "hideVimDates", 
         "useMonthNames", "knVimToggle", "birthStartToggle", 
-        "showAgeYears", "hideBhuktiAge"
+        "showAgeYears", "hideBhuktiAge", "equalMode" 
       ];
       
       const defaultUncheckedIds = [
@@ -1930,11 +1967,11 @@ function getPlanetHouseAbsolute(entity){
   if(abs == null) return "";
 
   const data = window.__lastSwissData;
-  if(!data || !data.cusps) return "";
+  if(!data || (!data.cusps && !document.getElementById("equalMode")?.checked)) return "";
 
   for(let i = 1; i <= 12; i++){
-    let current = data.cusps[i];
-    let next = data.cusps[i === 12 ? 1 : i + 1];
+    let current = getCuspAbsolute(i);
+    let next = getCuspAbsolute(i === 12 ? 1 : i + 1);
 
     if(current < next){
       if(abs >= current && abs < next) return i;
@@ -2177,8 +2214,14 @@ function buildSixFoldTables() {
   // ONLY attach the title to the header wrap so it stays visible
   headerWrap.appendChild(mainTitle);
 
+  // Initialize the expansion tracker if it doesn't exist
+  if (typeof window.__sixFoldExpanded === 'undefined') {
+    window.__sixFoldExpanded = false;
+  }
+
   const mainContainer = document.createElement("div");
-  mainContainer.style.display = "block"; 
+  // Use the tracker to decide if it should be open or closed
+  mainContainer.style.display = window.__sixFoldExpanded ? "block" : "none"; 
   mainContainer.style.width = "100%";
 
   // Add some bottom margin and attach the toggle INSIDE the collapsible container
@@ -2186,7 +2229,9 @@ function buildSixFoldTables() {
   mainContainer.appendChild(fourFoldLabel);
 
   mainTitle.onclick = () => {
-    mainContainer.style.display = mainContainer.style.display === "none" ? "block" : "none";
+    const isHidden = mainContainer.style.display === "none";
+    mainContainer.style.display = isHidden ? "block" : "none";
+    window.__sixFoldExpanded = isHidden; // Save the new state globally!
   };
 
 
@@ -2343,6 +2388,12 @@ function buildSixFoldTables() {
     });
 
     let uniqueNums = Object.keys(counts).map(Number).sort((a,b) => a - b);
+    
+    // --- NEW: Save these exact numbers globally so the Mixer can use them! ---
+    if (!window.__nadiMixedPlanetData) window.__nadiMixedPlanetData = {};
+    window.__nadiMixedPlanetData[p] = uniqueNums;
+    // -------------------------------------------------------------------------
+
     let mixedNumsStr = uniqueNums.map(n => {
       return counts[n] > 1 ? `${n}<sup>${counts[n]}</sup>` : `${n}`;
     }).join(", ") || "-";
@@ -2577,12 +2628,20 @@ function buildNadiTables() {
   title.style.letterSpacing = "1px";
   title.style.cursor = "pointer";
   
+  // Initialize the Nadi expansion tracker
+  if (typeof window.__nadiExpanded === 'undefined') {
+    window.__nadiExpanded = false;
+  }
+
   const mainContainer = document.createElement("div");
-  mainContainer.style.display = "block";
+  // Use the tracker to set the display
+  mainContainer.style.display = window.__nadiExpanded ? "block" : "none";
   mainContainer.style.width = "100%";
 
   title.onclick = () => {
-    mainContainer.style.display = mainContainer.style.display === "none" ? "block" : "none";
+    const isHidden = mainContainer.style.display === "none";
+    mainContainer.style.display = isHidden ? "block" : "none";
+    window.__nadiExpanded = isHidden; // Save the state!
   };
 
   wrap.appendChild(title);
@@ -3065,9 +3124,24 @@ function buildDashaBukthiMixer() {
   title.style.webkitBackgroundClip = "text";
   title.style.webkitTextFillColor = "transparent";
 
-  // --- ADD THESE 3 LINES ---
+
+
+
+
+
+
+// --- STATE INITIALIZATION ---
   if (typeof window.__mixerUntenantedState === 'undefined') {
     window.__mixerUntenantedState = true;
+  }
+  if (typeof window.__mixerStarlordOnlyState === 'undefined') {
+    window.__mixerStarlordOnlyState = false;
+  }
+  if (typeof window.__mixerFourFoldState === 'undefined') {
+    window.__mixerFourFoldState = true; // ON by default!
+  }
+  if (typeof window.__mixerAddDispositorState === 'undefined') {
+    window.__mixerAddDispositorState = true; // ON by default!
   }
 
   const untentLabel = document.createElement("label");
@@ -3075,9 +3149,53 @@ function buildDashaBukthiMixer() {
   untentLabel.style.color = "#d4af37";
   untentLabel.style.cursor = "pointer";
   untentLabel.innerHTML = `<input type="checkbox" id="mixerUntenantedToggle" ${window.__mixerUntenantedState ? 'checked' : ''}> Untenanted`;
-  
+
+  const starlordLabel = document.createElement("label");
+  starlordLabel.style.fontWeight = "900";
+  starlordLabel.style.color = "#d4af37";
+  starlordLabel.style.cursor = "pointer";
+  starlordLabel.innerHTML = `<input type="checkbox" id="mixerStarlordOnlyToggle" ${window.__mixerStarlordOnlyState ? 'checked' : ''}> STARLORD ONLY`;
+
+  const fourFoldMixerLabel = document.createElement("label");
+  fourFoldMixerLabel.style.fontWeight = "900";
+  fourFoldMixerLabel.style.color = "#d4af37";
+  fourFoldMixerLabel.style.cursor = "pointer";
+  fourFoldMixerLabel.innerHTML = `<input type="checkbox" id="mixerFourFoldToggle" ${window.__mixerFourFoldState ? 'checked' : ''}> 4 FOLD SIGNIFICATOR`;
+
+  // --- NEW: ADD DISPOSITOR TOGGLE ---
+  const addDispLabel = document.createElement("label");
+  addDispLabel.style.fontWeight = "900";
+  addDispLabel.style.color = "#d4af37";
+  addDispLabel.style.cursor = "pointer";
+  addDispLabel.innerHTML = `<input type="checkbox" id="mixerAddDispositorToggle" ${window.__mixerAddDispositorState ? 'checked' : ''}> Add Dispositor`;
+
   untentLabel.querySelector("input").addEventListener("change", (e) => {
-    window.__mixerUntenantedState = e.target.checked;
+    if (e.target.checked) {
+      window.__mixerUntenantedState = true;
+      window.__mixerStarlordOnlyState = false; 
+    } else {
+      window.__mixerUntenantedState = false;
+    }
+    buildDashaBukthiMixer(); 
+  });
+
+  starlordLabel.querySelector("input").addEventListener("change", (e) => {
+    if (e.target.checked) {
+      window.__mixerStarlordOnlyState = true;
+      window.__mixerUntenantedState = false; 
+    } else {
+      window.__mixerStarlordOnlyState = false;
+    }
+    buildDashaBukthiMixer(); 
+  });
+
+  fourFoldMixerLabel.querySelector("input").addEventListener("change", (e) => {
+    window.__mixerFourFoldState = e.target.checked;
+    buildDashaBukthiMixer(); 
+  });
+
+  addDispLabel.querySelector("input").addEventListener("change", (e) => {
+    window.__mixerAddDispositorState = e.target.checked;
     buildDashaBukthiMixer(); 
   });
 
@@ -3087,6 +3205,9 @@ function buildDashaBukthiMixer() {
   titleGroup.style.gap = "15px";
   titleGroup.appendChild(title);
   titleGroup.appendChild(untentLabel);
+  titleGroup.appendChild(starlordLabel);
+  titleGroup.appendChild(fourFoldMixerLabel); 
+  titleGroup.appendChild(addDispLabel); // Append new toggle
 
   headBar.appendChild(titleGroup);
 
@@ -3188,11 +3309,76 @@ function buildDashaBukthiMixer() {
     </tr>
   `;
 
-  let dashaPlanet = select.value;
-  let isMixerUntenanted = window.__mixerUntenantedState || false;
-  let dashaSigRaw = getPlanetSignificators(dashaPlanet, isMixerUntenanted);
-  if(dashaSigRaw === "-") dashaSigRaw = "";
-  let dashaNums = dashaSigRaw.split(",").map(n=>parseInt(n.trim())).filter(n=>!isNaN(n));
+  // --- NEW ENGINE: Standalone Mixer Generator ---
+  // Added isAddDispositor parameter to control Rahu/Ketu injection
+  function getMixerMixedNums(p, isUntenanted, isStarlordOnly, isFourFold, isDashaCol = false, isAddDispositor = true) {
+      let subLord = getSubLord(p);
+      let starLord = getStarLord(p);
+
+      // Apply Untenanted toggle
+      if (isUntenanted && shouldIgnoreStarLord(p, true)) {
+          starLord = "";
+      }
+
+      let pltInHouse = isStarlordOnly ? "" : getPlanetHouse(p);
+      let signLordOfHouses = isStarlordOnly ? "" : ((p === "Rahu" || p === "Ketu") ? "" : getLordsOf(p));
+
+      // --- INJECT DISPOSITOR FOR RAHU/KETU EXCLUSIVELY IN DASHA COLUMN (If Checkbox is ON) ---
+      let dispPlaced = "";
+      let dispLords = "";
+      if (isAddDispositor && isDashaCol && !isStarlordOnly && (p === "Rahu" || p === "Ketu")) {
+          let sign = getPlanetSign(p);
+          let dispositor = SIGN_LORDS[sign];
+          if (dispositor) {
+              dispPlaced = getPlanetHouse(dispositor);
+              dispLords = getLordsOf(dispositor);
+          }
+      }
+
+      let naklInHouse = starLord ? getPlanetHouse(starLord) : "";
+      let naklSgl = (starLord === "Rahu" || starLord === "Ketu" || !starLord) ? "" : getLordsOf(starLord);
+
+      // Kill sublord columns if 4 Fold OR Starlord Only is checked
+      let sublInHouse = (isFourFold || isStarlordOnly) ? "" : (subLord ? getPlanetHouse(subLord) : "");
+      let sublSgl = (isFourFold || isStarlordOnly) ? "" : ((subLord === "Rahu" || subLord === "Ketu" || !subLord) ? "" : getLordsOf(subLord));
+
+      // Push the new dispositor variables into the calculation array
+      let mixedArray = [sublInHouse, naklInHouse, pltInHouse, sublSgl, naklSgl, signLordOfHouses, dispPlaced, dispLords];
+
+      if(document.getElementById("useConjCusps")?.checked) {
+          let allowRaKe = document.getElementById("includeRaKeCuspal")?.checked;
+          if(!isStarlordOnly && (allowRaKe || (p !== "Rahu" && p !== "Ketu"))) {
+              let cusps = getCuspalConjunct(p);
+              if(cusps && cusps !== "-") mixedArray.push(cusps);
+          }
+      }
+
+      let numsList = [];
+      mixedArray.forEach(val => {
+          if(!val || val === "-") return;
+          String(val).split(",").forEach(s => {
+              let n = parseInt(s.trim());
+              if(!isNaN(n)) numsList.push(n);
+          });
+      });
+      
+      // Filter unique & sort
+      return [...new Set(numsList)].sort((a,b) => a - b);
+  }
+
+
+
+
+
+
+let dashaPlanet = select.value;
+  let isUntenanted = window.__mixerUntenantedState || false;
+  let isStarlordOnly = window.__mixerStarlordOnlyState || false;
+  let isFourFold = window.__mixerFourFoldState; // Automatically true on load
+  let isAddDispositor = window.__mixerAddDispositorState; // Grab the new toggle state
+
+  // --- PASS "true" as the 5th argument (Dasha Col) and pass the isAddDispositor state as the 6th ---
+  let dashaNums = getMixerMixedNums(dashaPlanet, isUntenanted, isStarlordOnly, isFourFold, true, isAddDispositor);
 
   let startIndex = DASHA_ORDER.indexOf(dashaPlanet);
   let bukthiOrder = [...DASHA_ORDER.slice(startIndex), ...DASHA_ORDER.slice(0, startIndex)];
@@ -3203,14 +3389,31 @@ function buildDashaBukthiMixer() {
   const bukthiColor = "#f472b6"; // Pink
   const mixedColor = "#ffff00"; // Yellow for duplicates/mixed
 
+  // --- Helper to extract Rahu/Ketu Dispositor placed house & lordships ---
+  function getNodeInfo(p, showDispositor) {
+    // Only display if the planet is a node AND the toggle is checked
+    if (!showDispositor || (p !== "Rahu" && p !== "Ketu")) return "";
+    let sign = getPlanetSign(p);
+    let dispositor = SIGN_LORDS[sign];
+    if (!dispositor) return "";
+    
+    let placed = getPlanetHouse(dispositor);
+    let lords = getLordsOf(dispositor); 
+    
+    return `<br><span style="font-size:12px; color:#a855f7;">[${getShort(dispositor)}: ${placed}, ${lords}]</span>`;
+  }
+
   bukthiOrder.forEach(bukthiPlanet => {
     let tr = document.createElement("tr");
 
-    // Bukthi ignores the Mixer Untenanted toggle and calculates normally
-    let bukthiSigRaw = getPlanetSignificators(bukthiPlanet, false);
-    if(bukthiSigRaw === "-") bukthiSigRaw = "";
-    let bukthiNums = bukthiSigRaw.split(",").map(n=>parseInt(n.trim())).filter(n=>!isNaN(n));
-
+    // Bukthi ignores Untenanted & StarlordOnly, but RESPECTS 4-Fold vs 6-Fold (Pass false for Dasha Col)
+    let bukthiNums = getMixerMixedNums(bukthiPlanet, false, false, isFourFold, false, isAddDispositor);
+	
+	
+	
+	
+	
+	
     // Group numbers and count occurrences
     let countMap = {};
     dashaNums.forEach(n => {
@@ -3298,12 +3501,12 @@ function buildDashaBukthiMixer() {
 
 
 
-function getPlanetSignificatorsSplit(planet, forceUntenanted = false){
+function getPlanetSignificatorsSplit(planet, forceUntenanted = false, forceStarlordOnly = false){
 
   let starLord = shouldIgnoreStarLord(planet, forceUntenanted) ? "" : getStarLord(planet);
 
-  let p_house = getPlanetHouse(planet);
-  let p_lords = getLordsOf(planet);
+  let p_house = forceStarlordOnly ? "" : getPlanetHouse(planet);
+  let p_lords = forceStarlordOnly ? "" : getLordsOf(planet);
 
   let s_house = starLord ? getPlanetHouse(starLord) : "";
   let s_lords = starLord ? getLordsOf(starLord) : "";
@@ -3380,7 +3583,7 @@ function getPlanetSignificatorsSplit(planet, forceUntenanted = false){
 
     let allNums=[];
 
-    [planet, starLord].forEach(ent=>{
+    [forceStarlordOnly ? null : planet, starLord].forEach(ent=>{
       if(!ent) return;
 
       let txt=getConjunctPlanets(ent);
@@ -3413,7 +3616,7 @@ function getPlanetSignificatorsSplit(planet, forceUntenanted = false){
 
     let allNums=[];
 
-    [planet, starLord].forEach(ent=>{
+    [forceStarlordOnly ? null : planet, starLord].forEach(ent=>{
       if(!ent) return;
 
       let asp=getAspectHouses(ent);
@@ -3450,7 +3653,7 @@ if(document.getElementById("useConjCusps")?.checked){
   let allNums=[];
   const allowRaKe = document.getElementById("includeRaKeCuspal")?.checked;
 
-  [planet, starLord].forEach(ent=>{
+  [forceStarlordOnly ? null : planet, starLord].forEach(ent=>{
     if(!ent) return;
 
     if(!allowRaKe && (ent==="Rahu" || ent==="Ketu")) return;
@@ -3478,7 +3681,7 @@ if(document.getElementById("useConjCusps")?.checked){
 
 
 
-function getPlanetSignificatorsSplit2(planet, forceUntenanted = false){
+function getPlanetSignificatorsSplit2(planet, forceUntenanted = false, forceStarlordOnly = false){
 
   let starLord = shouldIgnoreStarLord(planet, forceUntenanted) ? "" : getStarLord(planet);
 
@@ -3544,7 +3747,7 @@ return `${house}-${nums.join(",")}`;
 	
   }
 
-  let planetBlock = buildBlock(planet);
+  let planetBlock = forceStarlordOnly ? "" : buildBlock(planet);
   let starBlock = buildBlock(starLord);
 
   if(planetBlock && starBlock){
@@ -3568,27 +3771,27 @@ return `${house}-${nums.join(",")}`;
 
 
 
-function getPlanetSignificators(planet, forceUntenanted = false){
+function getPlanetSignificators(planet, forceUntenanted = false, forceStarlordOnly = false){
   if(!window.__lastSwissData) return "-";
 
   if(document.getElementById("splitSig2")?.checked){
-    return getPlanetSignificatorsSplit2(planet, forceUntenanted);
+    return getPlanetSignificatorsSplit2(planet, forceUntenanted, forceStarlordOnly);
   }
 
   if(document.getElementById("splitSig")?.checked){
-    return getPlanetSignificatorsSplit(planet, forceUntenanted);
+    return getPlanetSignificatorsSplit(planet, forceUntenanted, forceStarlordOnly);
   }
 
   let starLord = shouldIgnoreStarLord(planet, forceUntenanted) ? "" : getStarLord(planet);
 
-  let p_house = getPlanetHouse(planet);
-  let p_lords = getLordsOf(planet);
+  let p_house = forceStarlordOnly ? "" : getPlanetHouse(planet);
+  let p_lords = forceStarlordOnly ? "" : getLordsOf(planet);
   let s_house = starLord ? getPlanetHouse(starLord) : "";
   let s_lords = starLord ? getLordsOf(starLord) : "";
 
-  let conjPlanets = getConjunctPlanets(planet);
-  let aspects = getAspectHouses(planet);
-  let conjCusps = getCuspalConjunct(planet);
+  let conjPlanets = forceStarlordOnly ? "-" : getConjunctPlanets(planet);
+  let aspects = forceStarlordOnly ? "-" : getAspectHouses(planet);
+  let conjCusps = forceStarlordOnly ? "-" : getCuspalConjunct(planet);
 
   let s_conjPlanets = starLord ? getConjunctPlanets(starLord) : "-";
   let s_aspects = starLord ? getAspectHouses(starLord) : "-";
