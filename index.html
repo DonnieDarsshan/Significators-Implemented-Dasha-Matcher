@@ -258,7 +258,7 @@ button{
   <label><input type="checkbox" id="sign2signMode"> Sign-to-Sign</label>
   <label><input type="checkbox" id="kpMode" checked> KP (0°)</label>
   <label><input type="checkbox" id="vedicMode" > Vedic (15°)</label>
-  <label><input type="checkbox" id="equalMode" checked> Equal</label>
+  <label><input type="checkbox" id="equalMode" > Equal</label>
   <label><input type="checkbox" id="originalASC" checked> Original ASC</label>
   <label><input type="checkbox" id="showCusps" checked> Show Cusps</label>
   <label><input type="checkbox" id="trueNode" checked> True Node</label>
@@ -342,6 +342,10 @@ button{
 
 
 
+
+
+
+
 <div id="dashaDividerControls" style="
   display:none;
   flex-direction:column;
@@ -366,14 +370,22 @@ button{
         <option value="even_odd">Even-Odd</option> 
         <option value="career">Career & Business</option>
         <option value="marriage">Marriage</option>
+        <option value="property">Property & Vehicle Purchase</option>
+        <option value="education">Education</option>
+        <option value="love_marriage">Love Marriage</option>
+        <option value="love_affair">Love Affair Only</option>
+        <option value="film">Film Land Success</option>
         <option value="child">Child Birth</option>
+        <option value="travel">Travel Abroad</option>
+        <option value="court">Court Cases</option>
+        <option value="no_marriage">NO Marriage</option>
+        <option value="long_life">Long Life</option>
+        <option value="short_life">Short Life</option>
+        <option value="health">Health</option>
+        <option value="income">Income</option>
         <option value="long_char">Longevity Chara Lagna</option>
         <option value="long_sthira">Longevity Sthira Lagna</option>
         <option value="long_dwi">Longevity Dwiswabhava Lagna</option>
-        <option value="property">Property & Vehicle Purchase</option>
-        <option value="education">Education</option>
-        <option value="court">Court Cases</option>
-        <option value="travel">Travel Abroad</option>
       </select>
     </label>
   </div>
@@ -384,6 +396,15 @@ button{
     <label>NUMBER NEG : <input id="dividerNeg" type="text" style="width:140px;background:#010a08;color:#ecfdf5;border:1px solid #10b981;padding:4px;font-weight:900;"></label>
   </div>
 </div>
+
+
+
+
+
+
+
+
+
 
 <div id="dashaDividerTableWrap" style="width:100%;max-width:1400px;margin:10px auto 0 auto;"></div>
 
@@ -1461,9 +1482,11 @@ function loadSwissJSON(){
       // 1. HARD RESET ALL OVERRIDES, SHIFTS & STATE VARIABLES
       window.__manualOrderOverride = null; 
       window.__lastMixerSelection = null; 
-      window.__fourFoldState = false; // Resets 4-Fold Significators Toggle to OFF
-      window.__mixerUntenantedState = true; // Resets Mixer Untenanted Toggle
-      window.__mixerStarlordOnlyState = false; // Resets Mixer Starlord Only Toggle
+      window.__fourFoldState = true; // Resets 4-Fold Significators Toggle to ON
+      window.__mixerUntenantedState = true; // Resets Table 1 Untenanted ON
+      window.__mixerStarlordOnlyState = true; // Resets Table 1 Starlord Only ON
+      window.__mixer2UntenantedState = false; // Resets Table 2 Untenanted OFF
+      window.__mixer2StarlordOnlyState = true; // Resets Table 2 Starlord Only ON
       window.__mixerFourFoldState = true; // Resets Mixer 4-Fold Toggle (ON by Default)
       window.__mixerAddDispositorState = true; // <-- NEW: Resets Add Dispositor to ON
       window.__sixFoldExpanded = false; // Resets Six Fold open state
@@ -1498,13 +1521,13 @@ function loadSwissJSON(){
         "kpMode", "originalASC", "showCusps", "trueNode", 
         "useConjCusps", "ignoreRaKeLords", "hideVimDates", 
         "useMonthNames", "knVimToggle", "birthStartToggle", 
-        "showAgeYears", "hideBhuktiAge", "equalMode" 
+        "showAgeYears", "hideBhuktiAge" 
       ];
       
       const defaultUncheckedIds = [
         "sign2signMode", "vedicMode", "useConjPlanets", 
         "useAspects", "includeRaKeCuspal", "splitSig", "splitSig2", 
-        "ignoreUntenanted", "hideAntaraRest"
+        "ignoreUntenanted", "hideAntaraRest", "equalMode"
       ];
 
       defaultCheckedIds.forEach(id => {
@@ -2190,9 +2213,9 @@ function buildSixFoldTables() {
   mainTitle.style.letterSpacing = "1px";
   mainTitle.style.cursor = "pointer";
 
-  // --- Default 4-Fold to OFF ---
-  if (typeof window.__fourFoldState === 'undefined') {
-    window.__fourFoldState = false;
+  // --- SIX FOLD: Default 4-Fold to OFF ---
+if (typeof window.__fourFoldState === 'undefined') {
+    window.__fourFoldState = true; // 'true' = Checkbox is ON
   }
 
   // 4 Fold Significators Toggle
@@ -3090,7 +3113,52 @@ function getCurrentMahadasha(basePlanet) {
 
 
 
+function getCurrentBhukti(basePlanet) {
+  if (!window.__lastSwissData) return "Venus";
+  const MS_YEAR = 365.25 * 24 * 60 * 60 * 1000;
+  const nakSize = 360 / 27;
+  let baseAbs = getAbsDeg(basePlanet);
+  if (baseAbs == null) return "Venus";
+  let nakIndex = Math.floor(baseAbs / nakSize);
+  let startLord = NAKSHATRA_LORDS[nakIndex];
+  let frac = (baseAbs % nakSize) / nakSize;
+  let elapsedYears = DASHA_YEARS[startLord] * frac;
 
+  const data = window.__lastSwissData;
+  let birthDate = new Date(data.meta.datetime_utc);
+
+  let mahaStart = new Date(
+    birthDate.getTime()
+    - elapsedYears * MS_YEAR
+    + (VIM_CALIB_OFFSET_DAYS * 24 * 60 * 60 * 1000)
+  );
+
+  let startIndex = DASHA_ORDER.indexOf(startLord);
+  let order = [...DASHA_ORDER.slice(startIndex), ...DASHA_ORDER.slice(0, startIndex)];
+
+  let inp = document.getElementById("vimEventDate");
+  let checkDate = inp && inp.value ? new Date(inp.value) : new Date();
+
+  for (let mahaLord of order) {
+    let mahaYears = DASHA_YEARS[mahaLord];
+    let mahaEnd = new Date(mahaStart.getTime() + mahaYears * MS_YEAR);
+    if (checkDate >= mahaStart && checkDate < mahaEnd) {
+      let bhuktiIndex = DASHA_ORDER.indexOf(mahaLord);
+      let bhuktiOrder = [...DASHA_ORDER.slice(bhuktiIndex), ...DASHA_ORDER.slice(0, bhuktiIndex)];
+      let bhuktiStart = new Date(mahaStart);
+      for (let bhuktiLord of bhuktiOrder) {
+         let bhuktiYears = mahaYears * (DASHA_YEARS[bhuktiLord] / 120);
+         let bhuktiEnd = new Date(bhuktiStart.getTime() + bhuktiYears * MS_YEAR);
+         if (checkDate >= bhuktiStart && checkDate < bhuktiEnd) {
+             return bhuktiLord;
+         }
+         bhuktiStart = bhuktiEnd;
+      }
+    }
+    mahaStart = mahaEnd;
+  }
+  return order[0];
+}
 
 
 
@@ -3132,10 +3200,16 @@ function buildDashaBukthiMixer() {
 
 // --- STATE INITIALIZATION ---
   if (typeof window.__mixerUntenantedState === 'undefined') {
-    window.__mixerUntenantedState = true;
+    window.__mixerUntenantedState = false;
   }
   if (typeof window.__mixerStarlordOnlyState === 'undefined') {
-    window.__mixerStarlordOnlyState = false;
+    window.__mixerStarlordOnlyState = true; 
+  }
+  if (typeof window.__mixer2UntenantedState === 'undefined') {
+    window.__mixer2UntenantedState = false;
+  }
+  if (typeof window.__mixer2StarlordOnlyState === 'undefined') {
+    window.__mixer2StarlordOnlyState = true; 
   }
   if (typeof window.__mixerFourFoldState === 'undefined') {
     window.__mixerFourFoldState = true; // ON by default!
@@ -3170,22 +3244,12 @@ function buildDashaBukthiMixer() {
   addDispLabel.innerHTML = `<input type="checkbox" id="mixerAddDispositorToggle" ${window.__mixerAddDispositorState ? 'checked' : ''}> Add Dispositor`;
 
   untentLabel.querySelector("input").addEventListener("change", (e) => {
-    if (e.target.checked) {
-      window.__mixerUntenantedState = true;
-      window.__mixerStarlordOnlyState = false; 
-    } else {
-      window.__mixerUntenantedState = false;
-    }
+    window.__mixerUntenantedState = e.target.checked;
     buildDashaBukthiMixer(); 
   });
 
   starlordLabel.querySelector("input").addEventListener("change", (e) => {
-    if (e.target.checked) {
-      window.__mixerStarlordOnlyState = true;
-      window.__mixerUntenantedState = false; 
-    } else {
-      window.__mixerStarlordOnlyState = false;
-    }
+    window.__mixerStarlordOnlyState = e.target.checked;
     buildDashaBukthiMixer(); 
   });
 
@@ -3315,18 +3379,30 @@ function buildDashaBukthiMixer() {
       let subLord = getSubLord(p);
       let starLord = getStarLord(p);
 
-      // Apply Untenanted toggle
-      if (isUntenanted && shouldIgnoreStarLord(p, true)) {
+      // 1. Identify if the current planet is actually untenanted ($)
+      let isPlanetUntenanted = getUntenantedPlanets().includes(p);
+
+      // 2. STARLORD VISIBILITY RULE
+      // If "Untenanted" toggle is ON and the planet is actually untenanted, hide the StarLord
+      if (isUntenanted && isPlanetUntenanted) {
           starLord = "";
       }
 
-      let pltInHouse = isStarlordOnly ? "" : getPlanetHouse(p);
-      let signLordOfHouses = isStarlordOnly ? "" : ((p === "Rahu" || p === "Ketu") ? "" : getLordsOf(p));
+      // 3. PLANET VISIBILITY RULE
+      // If "STARLORD ONLY" toggle is ON, but ONLY if the planet is NOT untenanted, hide the Planet
+      let showPlanet = true;
+      if (isStarlordOnly && !isPlanetUntenanted) {
+          showPlanet = false;
+      }
+
+      // Apply visibility to Planet variables
+      let pltInHouse = showPlanet ? getPlanetHouse(p) : "";
+      let signLordOfHouses = showPlanet ? ((p === "Rahu" || p === "Ketu") ? "" : getLordsOf(p)) : "";
 
       // --- INJECT DISPOSITOR FOR RAHU/KETU EXCLUSIVELY IN DASHA COLUMN (If Checkbox is ON) ---
       let dispPlaced = "";
       let dispLords = "";
-      if (isAddDispositor && isDashaCol && !isStarlordOnly && (p === "Rahu" || p === "Ketu")) {
+      if (isAddDispositor && isDashaCol && showPlanet && (p === "Rahu" || p === "Ketu")) {
           let sign = getPlanetSign(p);
           let dispositor = SIGN_LORDS[sign];
           if (dispositor) {
@@ -3480,6 +3556,188 @@ let dashaPlanet = select.value;
   middleSelectWrap.style.margin = "25px 0 10px 0";
   middleSelectWrap.appendChild(selWrap);
   mixerWrap.appendChild(middleSelectWrap);
+
+  // ==============================================================
+  // --- NEW TABLE 2: BUKTHI TO ANTARA MIXER ---
+  // ==============================================================
+
+  const table2ControlsWrap = document.createElement("div");
+  table2ControlsWrap.style.display = "flex";
+  table2ControlsWrap.style.justifyContent = "center";
+  table2ControlsWrap.style.alignItems = "center";
+  table2ControlsWrap.style.gap = "15px";
+  table2ControlsWrap.style.margin = "35px 0 15px 0";
+
+  const untentLabel2 = document.createElement("label");
+  untentLabel2.style.fontWeight = "900";
+  untentLabel2.style.color = "#d4af37";
+  untentLabel2.style.cursor = "pointer";
+  untentLabel2.innerHTML = `<input type="checkbox" id="mixer2UntenantedToggle" ${window.__mixer2UntenantedState ? 'checked' : ''}> Untenanted`;
+
+  const starlordLabel2 = document.createElement("label");
+  starlordLabel2.style.fontWeight = "900";
+  starlordLabel2.style.color = "#d4af37";
+  starlordLabel2.style.cursor = "pointer";
+  starlordLabel2.innerHTML = `<input type="checkbox" id="mixer2StarlordOnlyToggle" ${window.__mixer2StarlordOnlyState ? 'checked' : ''}> STARLORD ONLY`;
+
+  untentLabel2.querySelector("input").addEventListener("change", (e) => {
+    window.__mixer2UntenantedState = e.target.checked;
+    buildDashaBukthiMixer(); 
+  });
+
+  starlordLabel2.querySelector("input").addEventListener("change", (e) => {
+    window.__mixer2StarlordOnlyState = e.target.checked;
+    buildDashaBukthiMixer(); 
+  });
+
+  table2ControlsWrap.appendChild(untentLabel2);
+  table2ControlsWrap.appendChild(starlordLabel2);
+
+  const middleSelectWrap2 = document.createElement("div");
+  middleSelectWrap2.style.display = "flex";
+  middleSelectWrap2.style.justifyContent = "center";
+  middleSelectWrap2.style.margin = "10px 0 15px 0";
+
+  const bukthiSelWrap = document.createElement("div");
+  bukthiSelWrap.style.fontWeight = "500";
+  bukthiSelWrap.style.color = "#d4af37";
+  bukthiSelWrap.innerHTML = `<span>Select Bukthi Planet: </span>`;
+
+  const bukthiSelect = document.createElement("select");
+  bukthiSelect.id = "bukthiMixerSelect";
+  bukthiSelect.style.background = "#010a08";
+  bukthiSelect.style.color = "#ecfdf5";
+  bukthiSelect.style.border = "1px solid #10b981";
+  bukthiSelect.style.padding = "4px 8px";
+  bukthiSelect.style.fontWeight = "500";
+
+  let currentBhukti = getCurrentBhukti("Chandra");
+
+  if (!window.__lastBukthiMixerSelection || !DASHA_ORDER.includes(window.__lastBukthiMixerSelection)) {
+    window.__lastBukthiMixerSelection = currentBhukti;
+  }
+
+  DASHA_ORDER.forEach(p => {
+    let opt = document.createElement("option");
+    opt.value = p;
+    opt.text = p;
+    if (p === window.__lastBukthiMixerSelection) opt.selected = true;
+    bukthiSelect.appendChild(opt);
+  });
+
+  bukthiSelect.onchange = (e) => {
+    window.__lastBukthiMixerSelection = e.target.value;
+    buildDashaBukthiMixer();
+    setTimeout(() => {
+      let restored = document.getElementById("bukthiMixerSelect");
+      if(restored) restored.focus();
+    }, 0);
+  };
+
+  bukthiSelect.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      let idx = bukthiSelect.selectedIndex;
+      let tot = bukthiSelect.options.length;
+      if (e.key === "ArrowDown") idx = (idx + 1) % tot;
+      else if (e.key === "ArrowUp") idx = (idx - 1 + tot) % tot;
+      bukthiSelect.selectedIndex = idx;
+      window.__lastBukthiMixerSelection = bukthiSelect.value;
+      buildDashaBukthiMixer();
+      setTimeout(() => {
+        let restored = document.getElementById("bukthiMixerSelect");
+        if(restored) restored.focus();
+      }, 0);
+    }
+  });
+
+  bukthiSelWrap.appendChild(bukthiSelect);
+  middleSelectWrap2.appendChild(bukthiSelWrap);
+
+  const table2 = document.createElement("table");
+  table2.style.width = "100%";
+  table2.style.borderCollapse = "collapse";
+  table2.innerHTML = `
+    <tr>
+      <th style="border:1px solid #10b981; padding:6px; font-weight:500;">Bukthi</th>
+      <th style="border:1px solid #10b981; padding:6px; font-weight:500;">Antara</th>
+      <th style="border:1px solid #10b981; padding:6px; font-weight:500;">Mixed</th>
+    </tr>
+  `;
+
+  let bukthiPlanet2 = bukthiSelect.value;
+  
+  // Rule: Bukthi gets SAME values as top table's Bukthi (Ignores toggles except 4-fold)
+  let bukthiColNums = getMixerMixedNums(bukthiPlanet2, false, false, isFourFold, false, isAddDispositor);
+
+  let startIndex2 = DASHA_ORDER.indexOf(bukthiPlanet2);
+  let antaraOrder = [...DASHA_ORDER.slice(startIndex2), ...DASHA_ORDER.slice(0, startIndex2)];
+
+  const antaraColor = "#38bdf8"; // Blue (Using same formatting color as top Dasha logic)
+
+  let isUntenanted2 = window.__mixer2UntenantedState || false;
+  let isStarlordOnly2 = window.__mixer2StarlordOnlyState || false;
+
+  antaraOrder.forEach(antaraPlanet => {
+    let tr = document.createElement("tr");
+
+    // Rule: Antara MUST follow Table 2 specific Untenanted/Starlord Only toggles
+    let antaraNums = getMixerMixedNums(antaraPlanet, isUntenanted2, isStarlordOnly2, isFourFold, true, isAddDispositor);
+
+    let countMap2 = {};
+    bukthiColNums.forEach(n => {
+      countMap2[n] = countMap2[n] || { count: 0, sources: new Set() };
+      countMap2[n].count++;
+      countMap2[n].sources.add('bukthi');
+    });
+    antaraNums.forEach(n => {
+      countMap2[n] = countMap2[n] || { count: 0, sources: new Set() };
+      countMap2[n].count++;
+      countMap2[n].sources.add('antara');
+    });
+
+    let sortedUniqueVals2 = Object.keys(countMap2).map(Number).sort((a,b) => a - b);
+
+    let mixedHtml2 = sortedUniqueVals2.map(val => {
+      let data = countMap2[val];
+      let color = mixedColor; // Yellow default
+      if (data.count === 1) {
+        color = data.sources.has('bukthi') ? bukthiColor : antaraColor;
+      }
+      let displayVal = data.count > 1 ? `${val}<sup>${data.count}</sup>` : val;
+      return `<span style="color:${color}; font-weight:500;">${displayVal}</span>`;
+    }).join("<span style='color:#ecfdf5'>, </span>");
+
+    if (!sortedUniqueVals2.length) mixedHtml2 = "-";
+
+    let bStr = bukthiColNums.length ? bukthiColNums.join(", ") : "-";
+    let aStr = antaraNums.length ? antaraNums.join(", ") : "-";
+
+    // PUSH to Divider Table with a (B-A) tag to distinguish it from the (D-B) rows
+    window.__lastMixedData.push({
+      planetName: `${getPlanetLabel(bukthiPlanet2)} - ${getPlanetLabel(antaraPlanet)} <span style="font-size:12px;color:#a855f7">(B-A)</span>`,
+      mixedHtml: mixedHtml2,
+      nums: sortedUniqueVals2
+    });
+
+    tr.innerHTML = `
+      <td style="border:1px solid #10b981; padding:6px; font-weight:500; text-align:center;">
+        ${getPlanetLabel(bukthiPlanet2)} - <span style="color:${bukthiColor}; font-weight:500;">${bStr}</span>
+      </td>
+      <td style="border:1px solid #10b981; padding:6px; font-weight:500; text-align:center;">
+        ${getPlanetLabel(antaraPlanet)} - <span style="color:${antaraColor}; font-weight:500;">${aStr}</span>
+      </td>
+      <td style="border:1px solid #10b981; padding:6px; font-weight:500; text-align:center;">
+        ${mixedHtml2}
+      </td>
+    `;
+    table2.appendChild(tr);
+  });
+
+  // Append new elements to the view
+  mixerWrap.appendChild(table2ControlsWrap);
+  mixerWrap.appendChild(middleSelectWrap2);
+  mixerWrap.appendChild(table2);
   
   // Trigger Divider rendering when Mixer is drawn
   renderDashaDividerTable();
@@ -4897,18 +5155,33 @@ function toggleSignificators(){
 const DIVIDER_TEMPLATES = {
   manual: { pos: "", support: "", neg: "" },
   even_odd: { pos: "2,4,6,10", support: "8,12", neg: "1,3,5,7,9,11" },
-  career: { pos: "6,10,11", support: "2,4,7", neg: "1,5,8,9,12" },
+  career: { pos: "6,10,11", support: "2,4,7", neg: "1,3,5,6,8,9,12" },
   marriage: { pos: "2,7,11", support: "3,5,9", neg: "1,4,6,8,10,12" },
-  love: { pos: "5,7,11", support: "7", neg: "1,4,6,8,12" },
-  child: { pos: "2,5,11", support: "3,7,9", neg: "1,4,8,10,12" },
-  long_char: { pos: "1,3,5,9", support: "", neg: "2,7,4,6,8,11,12" },
-  long_sthira: { pos: "1,3,5,11", support: "9", neg: "2,7,4,6,8,12" },
-  long_dwi: { pos: "1,3,5,11", support: "9", neg: "2,7,4,6,8,12" },
-  property: { pos: "4,11,12", support: "6,8", neg: "3,5,10" },
-  education: { pos: "4,5,9,10,11", support: "1,2,7", neg: "3,6,8,12" },
-  court: { pos: "9,10,11", support: "", neg: "1,3,6,8,12" },
-  travel: { pos: "3,9,12", support: "7", neg: "2,4,11" }
+  property: { pos: "4,11,12", support: "6,8", neg: "3,4,5,10" },
+  education: { pos: "4,5,9,11", support: "1,2,7,10", neg: "3,6,8,12" },
+  love_marriage: { pos: "2,5,7,11", support: "7", neg: "1,4,6,8,12" },
+  love_affair: { pos: "5,8,12", support: "", neg: "4,5,6,8,10,12" },
+  film: { pos: "5,6,7,10,11", support: "", neg: "8,12" },
+  child: { pos: "2,5,11", support: "3,7,9", neg: "1,4,6,8,10,12" },
+  travel: { pos: "3,9,12", support: "7", neg: "2,4,8,11" },
+  court: { pos: "6,10,11", support: "", neg: "1,3,6,8,12" },
+  no_marriage: { pos: "6,8,12", support: "1,4,10", neg: "5" },
+  long_life: { pos: "1,3,5,8,10", support: "", neg: "2,6,7,9,11,12" },
+  short_life: { pos: "2,6,7,9,11,12", support: "", neg: "1,3,5,8,10" },
+  health: { pos: "1,5,11", support: "3", neg: "4,6,8,12" },
+  income: { pos: "2,6,10,11", support: "1,7", neg: "5,8,9,12" },
+  long_char: { pos: "1,3,5,8,9", support: "", neg: "2,6,7,8,11,12" },
+  long_sthira: { pos: "1,3,5,8,11", support: "9", neg: "2,4,6,7,8,12" },
+  long_dwi: { pos: "1,3,5,8,11", support: "9", neg: "2,4,6,7,8,12" }
 };
+
+
+
+
+
+
+
+
 
 function renderDashaDividerTable() {
   const wrap = document.getElementById("dashaDividerTableWrap");
@@ -4931,39 +5204,68 @@ function renderDashaDividerTable() {
   const numsSupport = rawSupport.split(",").map(x=>+x.trim()).filter(x=>x>=1 && x<=12);
   const numsNeg = rawNeg.split(",").map(x=>+x.trim()).filter(x=>x>=1 && x<=12);
 
-  const table = document.createElement("table");
-  table.style.width = "100%";
-  table.style.borderCollapse = "collapse";
-  
-  table.innerHTML = `
-    <tr>
-      <th style="border:1px solid #10b981; padding:8px; font-weight:900;">Planets</th>
-      <th style="border:1px solid #10b981; padding:8px; font-weight:900;">Mixed</th>
-      <th style="border:1px solid #10b981; padding:8px; font-weight:900; color:#10b981;">NUMBER POS</th>
-      <th style="border:1px solid #10b981; padding:8px; font-weight:900; color:#d4af37;">NUMBER SUPPORT</th>
-      <th style="border:1px solid #10b981; padding:8px; font-weight:900; color:#ef4444;">NUMBER NEG</th>
-    </tr>
-  `;
-
-  window.__lastMixedData.forEach(row => {
-    // Filter the row.nums arrays to see what matches the user inputs
-    let matchPos = numsPos.filter(n => row.nums.includes(n)).sort((a,b)=>a-b);
-    let matchSupport = numsSupport.filter(n => row.nums.includes(n)).sort((a,b)=>a-b);
-    let matchNeg = numsNeg.filter(n => row.nums.includes(n)).sort((a,b)=>a-b);
-
-    let tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td style="border:1px solid #10b981; padding:8px; text-align:center; font-weight:500;">${row.planetName}</td>
-      <td style="border:1px solid #10b981; padding:8px; text-align:center; font-weight:500;">${row.mixedHtml}</td>
-      <td style="border:1px solid #10b981; padding:8px; text-align:center; font-weight:900; color:#10b981;">${matchPos.join(", ")}</td>
-      <td style="border:1px solid #10b981; padding:8px; text-align:center; font-weight:900; color:#d4af37;">${matchSupport.join(", ")}</td>
-      <td style="border:1px solid #10b981; padding:8px; text-align:center; font-weight:900; color:#ef4444;">${matchNeg.join(", ")}</td>
-    `;
-    table.appendChild(tr);
-  });
+  // 1. SPLIT THE DATA INTO TWO GROUPS
+  const dbData = window.__lastMixedData.filter(r => !r.planetName.includes("(B-A)"));
+  const baData = window.__lastMixedData.filter(r => r.planetName.includes("(B-A)"));
 
   wrap.innerHTML = "";
-  wrap.appendChild(table);
+
+  // 2. HELPER TO CREATE AN "ISLAND" TABLE
+  function createIslandTable(dataArray, titleText) {
+    const wrapper = document.createElement("div");
+    wrapper.style.marginBottom = "50px"; // Creates the clean gap between tables
+
+    const title = document.createElement("div");
+    title.innerHTML = titleText;
+    title.style.textAlign = "center";
+    title.style.color = "#d4af37";
+    title.style.fontWeight = "900";
+    title.style.fontSize = "22px";
+    title.style.marginBottom = "10px";
+    wrapper.appendChild(title);
+
+    const table = document.createElement("table");
+    table.style.width = "100%";
+    table.style.borderCollapse = "collapse";
+    
+    table.innerHTML = `
+      <tr>
+        <th style="border:1px solid #10b981; padding:8px; font-weight:900;">Planets</th>
+        <th style="border:1px solid #10b981; padding:8px; font-weight:900;">Mixed</th>
+        <th style="border:1px solid #10b981; padding:8px; font-weight:900; color:#10b981;">NUMBER POS</th>
+        <th style="border:1px solid #10b981; padding:8px; font-weight:900; color:#d4af37;">NUMBER SUPPORT</th>
+        <th style="border:1px solid #10b981; padding:8px; font-weight:900; color:#ef4444;">NUMBER NEG</th>
+      </tr>
+    `;
+
+    dataArray.forEach(row => {
+      let matchPos = numsPos.filter(n => row.nums.includes(n)).sort((a,b)=>a-b);
+      let matchSupport = numsSupport.filter(n => row.nums.includes(n)).sort((a,b)=>a-b);
+      let matchNeg = numsNeg.filter(n => row.nums.includes(n)).sort((a,b)=>a-b);
+
+      let tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td style="border:1px solid #10b981; padding:8px; text-align:center; font-weight:500;">${row.planetName}</td>
+        <td style="border:1px solid #10b981; padding:8px; text-align:center; font-weight:500;">${row.mixedHtml}</td>
+        <td style="border:1px solid #10b981; padding:8px; text-align:center; font-weight:900; color:#10b981;">${matchPos.join(", ")}</td>
+        <td style="border:1px solid #10b981; padding:8px; text-align:center; font-weight:900; color:#d4af37;">${matchSupport.join(", ")}</td>
+        <td style="border:1px solid #10b981; padding:8px; text-align:center; font-weight:900; color:#ef4444;">${matchNeg.join(", ")}</td>
+      `;
+      table.appendChild(tr);
+    });
+
+    wrapper.appendChild(table);
+    return wrapper;
+  }
+
+  // 3. APPEND BOTH ISLANDS
+  if (dbData.length > 0) {
+    wrap.appendChild(createIslandTable(dbData, "Dasha & Bukthi (D-B) View"));
+  }
+
+  if (baData.length > 0) {
+    wrap.appendChild(createIslandTable(baData, "Bukthi & Antara (B-A) View"));
+  }
 }
 
 // Event Listeners for Divider Inputs
