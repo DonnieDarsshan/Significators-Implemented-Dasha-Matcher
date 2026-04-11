@@ -259,10 +259,10 @@ button{
   <label><input type="checkbox" id="kpMode" checked> KP (0°)</label>
   <label><input type="checkbox" id="vedicMode" > Vedic (15°)</label>
   <label><input type="checkbox" id="equalMode" > Equal</label>
-  <label><input type="checkbox" id="originalASC" checked> Original ASC</label>
-  <label><input type="checkbox" id="showCusps" checked> Show Cusps</label>
+  <label><input type="checkbox" id="originalASC"> Original ASC</label>
+  <label><input type="checkbox" id="showCusps"> Show Cusps</label>
   <label><input type="checkbox" id="trueNode" checked> True Node</label>
-
+  
 
   
 </div>
@@ -804,14 +804,22 @@ function getCuspAbsolute(cuspNum) {
   if (!data) return null;
   
   if (document.getElementById("equalMode")?.checked) {
-    if (data.lagna == null) return null;
-    // Calculate equal 30-degree slices from Lagna
-    return (data.lagna + (cuspNum - 1) * 30) % 360;
+    // DYNAMIC PIVOT FIX: Anchor to the selected planet
+    let pivot = document.getElementById("kundaliPivot")?.value || "Lagna";
+    let pivotAbs = getAbsDeg(pivot);
+    if (pivotAbs == null) return null;
+    // Calculate equal 30-degree slices exactly from Pivot
+    return (pivotAbs + (cuspNum - 1) * 30) % 360;
   }
   
   // Default Placidus from JSON
   return data.cusps ? data.cusps[cuspNum] : null;
 }
+
+
+
+
+
 
 function getPlanetSign(entity){
   let abs=getAbsDeg(entity);
@@ -828,44 +836,10 @@ function getPlanetSign(entity){
 
 
 
-function getPlanetHouse(entity){
-  let abs = getAbsDeg(entity); // Use absolute degree for accurate cusp comparison
-  if(abs == null) return "";
 
-  let pivot = document.getElementById("kundaliPivot").value;
-  let isSignToSign = document.getElementById("sign2signMode")?.checked;
-  const data = window.__lastSwissData;
 
-  // 1. If Sign-to-Sign mode is ON, or Pivot is NOT Lagna -> Use original Whole Sign logic
-  if(isSignToSign || pivot !== "Lagna" || !data || !data.cusps) {
-    let shifted = getShiftedDeg(entity);
-    let pivotAbs = getShiftedDeg(pivot);
-    if(pivotAbs == null) return "";
 
-    let baseSign = Math.floor(pivotAbs / 30);
-    let planetSign = Math.floor(shifted / 30);
 
-    return ((planetSign - baseSign + 12) % 12) + 1;
-  }
-
-  // 2. Exact Cuspal Mode (KP/Equal) -> Compare absolute degrees against Cusp boundaries
-  for(let i = 1; i <= 12; i++){
-    let currentCusp = getCuspAbsolute(i);
-    let nextCusp = getCuspAbsolute(i === 12 ? 1 : i + 1);
-
-    if (currentCusp == null || nextCusp == null) return "";
-
-    if(currentCusp < nextCusp){
-      // Normal cusp span (e.g., Capricorn 290° to Aquarius 319°)
-      if(abs >= currentCusp && abs < nextCusp) return i;
-    } else {
-      // Cusp span that crosses 360°/0° (e.g., Pisces to Aries)
-      if(abs >= currentCusp || abs < nextCusp) return i;
-    }
-  }
-
-  return "";
-}
 
 
 
@@ -1190,30 +1164,217 @@ function getShiftedDeg(entity){
 
 
 
-function getGlobalOffset(){
-  if(!kpMode.checked && !vedicMode.checked) return 0;
 
-  let pivot=document.getElementById("kundaliPivot").value;
-  let abs=getAbsDeg(pivot);
-  if(abs==null) return 0;
 
-  let deg=abs%30;
 
-  if(kpMode.checked){
 
-    if(document.getElementById("originalASC").checked){
-      return -deg;   // move pivot to 0° of same sign
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ======================================
+   DYNAMIC PLANET HOUSE LOGIC 
+   (Relative Cusp Shift by Default, Exact 30° Math when Checkbox is ON)
+====================================== */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ======================================
+   HELPER: STRICT CUSP HOUSE LOCATOR
+   Calculates which house a planet is in strictly using True/Equal Cusps
+====================================== */
+function getBaseCuspHouse(entAbs) {
+    if(entAbs === null) return 1;
+    
+    let cusps = [];
+    for(let i=1; i<=12; i++) {
+        let cAbs = getCuspAbsolute(i); 
+        if(cAbs !== null) cusps.push({ house: i, abs: ((cAbs % 360) + 360) % 360 });
     }
+    
+    // FIXED: Removed the bypass so Equal Mode strictly respects the boundaries!
+    if (cusps.length === 12) {
+        cusps.sort((a,b) => a.abs - b.abs);
+        
+        for(let i=0; i<12; i++) {
+            let c1 = cusps[i].abs;
+            let c2 = cusps[(i+1)%12].abs;
+            let h = cusps[i].house;
+            const eps = 0.000001; // Tiny buffer for floating-point errors
+            if(c1 < c2) {
+                if(entAbs >= (c1 - eps) && entAbs < (c2 - eps)) return h;
+            } else {
+                if(entAbs >= (c1 - eps) || entAbs < (c2 - eps)) return h;
+            }
+        }
+        return 1;
+    } else {
+        // Equal House / Fallback math anchored to Pivot
+        let pivot = document.getElementById("kundaliPivot")?.value || "Lagna";
+        let pivotAbs = getAbsDeg(pivot);
+        if(pivotAbs === null) return 1;
+        
+        let pivotDeg = pivotAbs % 30;
+        let isOrig = document.getElementById("originalASC")?.checked;
+        
+        let shift = (!isOrig && pivotDeg >= 15) ? 30 : 0;
+        let p = (pivotAbs + shift + 360) % 360;
+        
+        let diff = entAbs - p;
+        if(diff < 0) diff += 360;
+        let h = Math.floor(diff / 30) + 1;
+        return h > 12 ? h - 12 : h;
+    }
+}
 
-    return (deg>=15?30:0)-deg;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ======================================
+   DYNAMIC PLANET HOUSE LOGIC 
+====================================== */
+
+
+function getPlanetHouse(entity){
+  let pivot = document.getElementById("kundaliPivot").value;
+  let pivotAbs = getAbsDeg(pivot);
+  let entAbs = getAbsDeg(entity);
+  if(pivotAbs === null || entAbs === null) return "";
+
+  /* MODE 1 : SIGN-TO-SIGN */
+  if(document.getElementById("sign2signMode")?.checked){
+    let pSign = Math.floor((pivotAbs + 0.000001) / 30);
+    let eSign = Math.floor((entAbs + 0.000001) / 30);
+    let house = eSign - pSign + 1;
+    if(house <= 0) house += 12;
+    return house;
   }
 
-  if(vedicMode.checked){
-    return 15-deg;
+  /* MODE 2 : KP MODE */
+  if(document.getElementById("kpMode")?.checked){
+      let pivotBaseHouse = 1;
+      if (pivot.includes("CSL")) {
+          pivotBaseHouse = parseInt(pivot, 10);
+      } else if (pivot === "Lagna") {
+          pivotBaseHouse = 1;
+      } else {
+          pivotBaseHouse = getBaseCuspHouse(pivotAbs);
+      }
+      
+      let entBaseHouse = getBaseCuspHouse(entAbs);
+      let house = entBaseHouse - pivotBaseHouse + 1;
+      if(house <= 0) house += 12;
+      return house;
+  }
+
+  /* MODE 3 : VEDIC MODE */
+  if(document.getElementById("vedicMode")?.checked){
+    let bhavaStart = pivotAbs - 15;
+    bhavaStart = ((bhavaStart % 360) + 360) % 360;
+    let diff = entAbs - bhavaStart;
+    diff = ((diff % 360) + 360) % 360;
+    // Floating point safety added here
+    let house = Math.floor((diff + 0.000001) / 30) + 1;
+    if(house > 12) house -= 12;
+    return house;
+  }
+
+  return 1;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ======================================
+   GLOBAL OFFSET
+   (Forces UI to ALWAYS snap pivot planet to 0° in KP mode)
+====================================== */
+
+
+
+function getGlobalOffset(){
+  if(!document.getElementById("kpMode")?.checked && !document.getElementById("vedicMode")?.checked) return 0;
+
+  let pivot = document.getElementById("kundaliPivot").value;
+  let abs = getAbsDeg(pivot);
+  if(abs == null) return 0;
+  
+  let pivotDeg = abs % 30;
+
+  if(document.getElementById("kpMode")?.checked){
+    if(pivot.includes("CSL")){
+      return 0;
+    }
+
+    let isOrig = document.getElementById("originalASC")?.checked;
+
+    // FIXED: Removed the Equal Mode bypass. 
+    // Now it correctly jumps forward to the next sign if Original ASC is OFF and the planet is >= 15°.
+    if(!isOrig && pivotDeg >= 15){
+      return 30 - pivotDeg;   
+    }
+
+    return -pivotDeg;
+  }
+
+  if(document.getElementById("vedicMode")?.checked){
+    return 15 - pivotDeg;
   }
 
   return 0;
 }
+
+
+
+
+
+
+
 
 
 
@@ -1247,6 +1408,17 @@ document.getElementById("equalMode")?.addEventListener("change", () => {
 });
 
 
+
+
+
+
+
+
+
+
+/* ======================================
+   KUNDALI RENDERER (BHAVA CHALIT OVERRIDE)
+====================================== */
 function drawSIKundali(){
 
   initSIKundali();
@@ -1255,210 +1427,149 @@ function drawSIKundali(){
   let pivot=document.getElementById("kundaliPivot").value;
   let pivotAbs=getShiftedDeg(pivot);
   if(pivotAbs==null) return;
-  
-  let pivotOriginal = getAbsDeg(pivot);
-
-
-
-
 
   let offset=getGlobalOffset();
-
-
-
-
-
-
- let baseSignIndex = Math.floor(pivotAbs / 30);
-
-
   
-  
-  
-  
-  
+  // THE FIX: Adding +0.000001 prevents the 29.99999° bug from pushing Lagna backward into the previous sign.
+  let baseSignIndex = Math.floor((pivotAbs + 0.000001) / 30) % 12;
 
   let cells=[...document.querySelectorAll("#siKundali .siCell[data-sign]")];
-
- // Get all cells including empty ones to maintain index integrity
   let allCells = document.querySelectorAll("#siKundali .siCell");
   
   allCells.forEach(cell => {
     let sign = cell.dataset.sign;
-    if(!sign) return; // Skip the center empty cells
+    if(!sign) return; 
     
     let signIndex = ZODIAC_ORDER.indexOf(sign);
     let houseNum = ((signIndex - baseSignIndex + 12) % 12) + 1;
     
     cell.querySelector(".siHouse").textContent = houseNum;
     cell.querySelector(".siSign").textContent = "";
-    cell.querySelector(".siList").innerHTML = ""; // Clear old planets
-	
-	
-	
-	
-	
-	
-	
-
-
+    cell.querySelector(".siList").innerHTML = ""; 
   });
-  
-  
-  
-  
 
   let buckets={};
+  let isKP = document.getElementById("kpMode")?.checked;
   
-  
-if(document.getElementById("showCusps")?.checked){
+  if(document.getElementById("showCusps")?.checked){
+    const data = window.__lastSwissData;
+    if(data && (data.cusps || document.getElementById("equalMode")?.checked)){
+      for(let i=0;i<12;i++){
+        let cuspNum = i + 1;
+        let cuspAbs = getCuspAbsolute(cuspNum);
+        if(typeof cuspAbs !== "number") continue;
 
-  const data = window.__lastSwissData;
-  if(!data || (!data.cusps && !document.getElementById("equalMode")?.checked)) return;
+        let shifted = (cuspAbs + offset + 360) % 360;
+        let signIndex;
+        
+        // Force Cusps to perfectly align with Houses in KP Mode
+        if(isKP && pivot === "Lagna"){ 
+            signIndex = (baseSignIndex + i) % 12;
+        } else {
+            // Epsilon safety added
+            signIndex = Math.floor((shifted + 0.000001) / 30) % 12;
+        }
+        
+        let sign = signs[signIndex+1];
+        if(!buckets[sign]) buckets[sign]=[];
 
-  // use SAME offset as planets (fixes Original ASC / KP / Vedic)
-  let offset = getGlobalOffset();
+        // Epsilon safety for visual minutes/degrees rendering
+        let d = shifted % 30;
+        let deg = Math.floor(d + 0.000001);
+        let min = Math.floor(((d + 0.000001) - deg) * 60);
 
-  for(let i=0;i<12;i++){
-
-    let cuspNum = i + 1;
-    let cuspAbs = getCuspAbsolute(cuspNum);
-
-    if(typeof cuspAbs !== "number") continue;
-
-    // APPLY GLOBAL OFFSET (THIS WAS MISSING)
-    let shifted = (cuspAbs + offset + 360) % 360;
-
-    let signIndex = Math.floor(shifted/30);
-    let sign = signs[signIndex+1];
-
-    if(!buckets[sign]) buckets[sign]=[];
-
-    let deg = Math.floor(shifted%30);
-    let min = Math.floor(((shifted%30)-deg)*60);
-
-    buckets[sign].push({
-      label:`C${cuspNum}`,
-      text:`C${cuspNum} :: ${String(deg).padStart(2,"0")}°${String(min).padStart(2,"0")}′`,
-      type:"cusp",
-      deg,
-      signIndex
-    });
+        buckets[sign].push({
+          label:`C${cuspNum}`,
+          text:`C${cuspNum} :: ${String(deg).padStart(2,"0")}°${String(min).padStart(2,"0")}′`,
+          type:"cusp",
+          deg,
+          signIndex
+        });
+      }
+    }
   }
-}
-
-
-
-
-
-
-
-
-
 
   planets.filter(p=>!p.includes("CSL")).forEach(p=>{
     let abs=getAbsDeg(p);
     if(abs==null) return;
 
     let shifted=(abs+offset+360)%360;
-    let signIndex=Math.floor(shifted/30);
-    let sign=signs[signIndex+1];
-
-    if(!buckets[sign]) buckets[sign]=[];
-	
     let d = shifted % 30;
-	let deg = Math.floor(d);
-	let min = Math.floor((d - deg) * 60);
+    
+    // Epsilon safety for visual minutes/degrees rendering
+    let deg = Math.floor(d + 0.000001);
+    let min = Math.floor(((d + 0.000001) - deg) * 60);
 
-	buckets[sign].push({
-	  label:p,
-	  deg,
-	  min
-	});
+    let signIndex;
+    
+    // THE MAGIC: Force Visual UI to match the exact mathematical House!
+    if(isKP){
+        let h = parseInt(getPlanetHouse(p));
+        if(isNaN(h)) h = 1;
+        signIndex = (baseSignIndex + h - 1) % 12;
+    } else {
+        // Epsilon safety added
+        signIndex = Math.floor((shifted + 0.000001) / 30) % 12;
+    }
+    
+    let sign=signs[signIndex+1];
+    if(!buckets[sign]) buckets[sign]=[];
 
-	
-	
+    buckets[sign].push({
+      label:p,
+      deg,
+      min
+    });
   });
 
+  Object.keys(buckets).forEach(sign=>{
+    let cell=cells.find(c=>c.dataset.sign===sign);
+    if(!cell) return;
+    let signIndex=ZODIAC_ORDER.indexOf(sign);
 
+    function degValue(p){
+      return (p.deg || 0) + ((p.min || 0)/60);
+    }
 
+    if(signIndex<=5){
+      buckets[sign].sort((a,b)=>degValue(a)-degValue(b));
+    }else{
+      buckets[sign].sort((a,b)=>degValue(b)-degValue(a));
+    }
 
-	Object.keys(buckets).forEach(sign=>{
-	  let cell=cells.find(c=>c.dataset.sign===sign);
-	  if(!cell) return;
+    buckets[sign].forEach(p=>{
+      let d=document.createElement("div");
 
-	  let signIndex=ZODIAC_ORDER.indexOf(sign);
+      if(p.type==="cusp"){
+        d.textContent = p.text;
+        d.style.color="#10b981";
+        d.style.fontWeight="900";
+      }else{
+        let minText = (p.min!==undefined) ? String(p.min).padStart(2,"0")+"′" : "";
+        d.textContent=`${p.label} ${p.deg}°${minText}`;
+        d.style.fontWeight="900";
 
-	  /* Aries–Virgo: ascending degree
-	   Libra–Pisces: descending degree */
-
-		function degValue(p){
-		  return (p.deg || 0) + ((p.min || 0)/60);
-		}
-
-		if(signIndex<=5){
-		  buckets[sign].sort((a,b)=>degValue(a)-degValue(b));
-		}else{
-		  buckets[sign].sort((a,b)=>degValue(b)-degValue(a));
-		}
-
-
-
-
-
-
-	buckets[sign].forEach(p=>{
-  let d=document.createElement("div");
-
-  if(p.type==="cusp"){
-    d.textContent = p.text;
-    d.style.color="#10b981";
-    d.style.fontWeight="900";
-  
-  }else{
-    let minText = (p.min!==undefined)
-      ? String(p.min).padStart(2,"0")+"′"
-      : "";
-    d.textContent=`${p.label} ${p.deg}°${minText}`;
-
-    // make all planets bold
-    d.style.fontWeight="900";
-
-    // pivot highlight
-    // pivot highlight
-		let pivot=document.getElementById("kundaliPivot").value;
-
-		// normal planet match
-		if(p.label===pivot){
-		  d.style.color="#ffff00";
-		  d.style.fontSize="15px";
-		}
-
-		// CSL match (pivot is "1 CSL" but label is "C1")
-		if(pivot.includes("CSL")){
-		  let num = parseInt(pivot);
-		  if(p.label==="C"+num){
-			d.style.color="#ffff00";
-			d.style.fontSize="15px";
-		  }
-		}
-
-  }
-
-
-
-
-
-
-
-	  
-
-	  cell.querySelector(".siList").appendChild(d);
-	});
-
-
-	});
+        let pivotSelect=document.getElementById("kundaliPivot").value;
+        if(p.label===pivotSelect || (pivotSelect.includes("CSL") && p.label==="C"+parseInt(pivotSelect))){
+          d.style.color="#ffff00";
+          d.style.fontSize="15px";
+        }
+      }
+      cell.querySelector(".siList").appendChild(d);
+    });
+  });
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1484,11 +1595,11 @@ function loadSwissJSON(){
       window.__lastMixerSelection = null; 
       window.__fourFoldState = true; // Resets 4-Fold Significators Toggle to ON
       window.__mixerUntenantedState = true; // Resets Table 1 Untenanted ON
-      window.__mixerStarlordOnlyState = true; // Resets Table 1 Starlord Only ON
-      window.__mixer2UntenantedState = false; // Resets Table 2 Untenanted OFF
-      window.__mixer2StarlordOnlyState = true; // Resets Table 2 Starlord Only ON
+      window.__mixerStarlordOnlyState = false; // Resets Table 1 Starlord Only OFF
+      window.__mixer2UntenantedState = true; // Resets Table 2 Untenanted ON
+      window.__mixer2StarlordOnlyState = false; // Resets Table 2 Starlord Only OFF
       window.__mixerFourFoldState = true; // Resets Mixer 4-Fold Toggle (ON by Default)
-      window.__mixerAddDispositorState = true; // <-- NEW: Resets Add Dispositor to ON
+      window.__mixerAddDispositorState = false; // <-- NEW: Resets Add Dispositor to OFF
       window.__sixFoldExpanded = false; // Resets Six Fold open state
       window.__nadiExpanded = false;    // Resets Nadi open state
       VIM_CALIB_OFFSET_DAYS = 0; // Resets the Days Calibration shift
@@ -1518,17 +1629,19 @@ function loadSwissJSON(){
 
       // 3. HARD RESET ALL CHECKBOXES TO THEIR ORIGINAL HTML STATE
       const defaultCheckedIds = [
-        "kpMode", "originalASC", "showCusps", "trueNode", 
+		"kpMode", "trueNode", 
         "useConjCusps", "ignoreRaKeLords", "hideVimDates", 
         "useMonthNames", "knVimToggle", "birthStartToggle", 
         "showAgeYears", "hideBhuktiAge" 
       ];
       
       const defaultUncheckedIds = [
-        "sign2signMode", "vedicMode", "useConjPlanets", 
-        "useAspects", "includeRaKeCuspal", "splitSig", "splitSig2", 
-        "ignoreUntenanted", "hideAntaraRest", "equalMode"
-      ];
+		  "sign2signMode", "vedicMode", 
+		  "originalASC", "showCusps",
+		  "useConjPlanets", "useAspects",
+		  "includeRaKeCuspal", "splitSig", "splitSig2", 
+		  "ignoreUntenanted", "hideAntaraRest", "equalMode"
+		];
 
       defaultCheckedIds.forEach(id => {
         let el = document.getElementById(id);
@@ -1675,15 +1788,19 @@ document.getElementById("showCusps")
 
 
 
-document.getElementById("trueNode")
-  ?.addEventListener("change", () => {
+
+// 👇 PASTE THE NEW TRUE NODE LISTENER RIGHT HERE 👇
+document.getElementById("trueNode")?.addEventListener("change", () => {
     drawSIKundali();
     buildSignificatorTable();
     buildLordshipDecider();
-    buildSixFoldTables(); // <-- Added
-    buildNadiTables();    // <-- Added
+    buildSixFoldTables(); 
+    buildNadiTables();    
     buildVimshottari();
-  });
+});
+
+
+
 
 ["useConjPlanets","useAspects","useConjCusps","ignoreRaKeLords","includeRaKeCuspal","ignoreUntenanted"].forEach(id=>{
   document.getElementById(id).addEventListener("change",()=>{
@@ -1992,16 +2109,17 @@ function getPlanetHouseAbsolute(entity){
   const data = window.__lastSwissData;
   if(!data || (!data.cusps && !document.getElementById("equalMode")?.checked)) return "";
 
-  for(let i = 1; i <= 12; i++){
-    let current = getCuspAbsolute(i);
-    let next = getCuspAbsolute(i === 12 ? 1 : i + 1);
+ for(let i = 1; i <= 12; i++){
+        let current = getCuspAbsolute(i);
+        let next = getCuspAbsolute(i === 12 ? 1 : i + 1);
+        const eps = 0.000001; // Tiny buffer for floating-point errors
 
-    if(current < next){
-      if(abs >= current && abs < next) return i;
-    } else {
-      if(abs >= current || abs < next) return i;
-    }
-  }
+        if(current < next){
+          if(abs >= (current - eps) && abs < (next - eps)) return i;
+        } else {
+          if(abs >= (current - eps) || abs < (next - eps)) return i;
+        }
+      }
 
   return "";
 }
@@ -3203,19 +3321,19 @@ function buildDashaBukthiMixer() {
     window.__mixerUntenantedState = false;
   }
   if (typeof window.__mixerStarlordOnlyState === 'undefined') {
-    window.__mixerStarlordOnlyState = true; 
+    window.__mixerStarlordOnlyState = false; 
   }
   if (typeof window.__mixer2UntenantedState === 'undefined') {
-    window.__mixer2UntenantedState = false;
+    window.__mixer2UntenantedState = true;
   }
   if (typeof window.__mixer2StarlordOnlyState === 'undefined') {
-    window.__mixer2StarlordOnlyState = true; 
+    window.__mixer2StarlordOnlyState = false; 
   }
   if (typeof window.__mixerFourFoldState === 'undefined') {
     window.__mixerFourFoldState = true; // ON by default!
   }
   if (typeof window.__mixerAddDispositorState === 'undefined') {
-    window.__mixerAddDispositorState = true; // ON by default!
+    window.__mixerAddDispositorState = false; // OFF by default!
   }
 
   const untentLabel = document.createElement("label");
@@ -3667,22 +3785,23 @@ let dashaPlanet = select.value;
 
   let bukthiPlanet2 = bukthiSelect.value;
   
-  // Rule: Bukthi gets SAME values as top table's Bukthi (Ignores toggles except 4-fold)
-  let bukthiColNums = getMixerMixedNums(bukthiPlanet2, false, false, isFourFold, false, isAddDispositor);
+  // Move these up so Bukthi can use them
+  let isUntenanted2 = window.__mixer2UntenantedState || false;
+  let isStarlordOnly2 = window.__mixer2StarlordOnlyState || false;
+
+  // NEW Rule: Bukthi gets SAME values as top table's Dasha (Uses Toggles & isDashaCol = true)
+  let bukthiColNums = getMixerMixedNums(bukthiPlanet2, isUntenanted2, isStarlordOnly2, isFourFold, true, isAddDispositor);
 
   let startIndex2 = DASHA_ORDER.indexOf(bukthiPlanet2);
   let antaraOrder = [...DASHA_ORDER.slice(startIndex2), ...DASHA_ORDER.slice(0, startIndex2)];
 
-  const antaraColor = "#38bdf8"; // Blue (Using same formatting color as top Dasha logic)
-
-  let isUntenanted2 = window.__mixer2UntenantedState || false;
-  let isStarlordOnly2 = window.__mixer2StarlordOnlyState || false;
+  const antaraColor = "#38bdf8"; // Blue
 
   antaraOrder.forEach(antaraPlanet => {
     let tr = document.createElement("tr");
 
-    // Rule: Antara MUST follow Table 2 specific Untenanted/Starlord Only toggles
-    let antaraNums = getMixerMixedNums(antaraPlanet, isUntenanted2, isStarlordOnly2, isFourFold, true, isAddDispositor);
+    // NEW Rule: Antara acts like the top table's Bukthi (Ignores Toggles & isDashaCol = false)
+    let antaraNums = getMixerMixedNums(antaraPlanet, false, false, isFourFold, false, isAddDispositor);
 
     let countMap2 = {};
     bukthiColNums.forEach(n => {
@@ -5299,3 +5418,4 @@ setTimeout(() => {
 
 </body>
 </html>
+// 🔥 UNEQUAL PLACIDUS MODE: Anchored perfectly to the Planet 🔥
