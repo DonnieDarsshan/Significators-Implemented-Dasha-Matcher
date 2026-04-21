@@ -259,7 +259,7 @@ button{
   <label><input type="checkbox" id="kpMode" checked> KP (0°)</label>
   <label><input type="checkbox" id="vedicMode" > Vedic (15°)</label>
   <label><input type="checkbox" id="equalMode" > Equal</label>
-  <label><input type="checkbox" id="originalASC"> Original ASC</label>
+  <label><input type="checkbox" id="originalASC" checked> Original ASC</label>
   <label><input type="checkbox" id="showCusps"> Show Cusps</label>
   <label><input type="checkbox" id="trueNode" checked> True Node</label>
   
@@ -1593,17 +1593,29 @@ function loadSwissJSON(){
       // 1. HARD RESET ALL OVERRIDES, SHIFTS & STATE VARIABLES
       window.__manualOrderOverride = null; 
       window.__lastMixerSelection = null; 
-      window.__fourFoldState = true; // Resets 4-Fold Significators Toggle to ON
-      window.__mixerUntenantedState = true; // Resets Table 1 Untenanted ON
-      window.__mixerStarlordOnlyState = false; // Resets Table 1 Starlord Only OFF
-      window.__mixer2UntenantedState = true; // Resets Table 2 Untenanted ON
-      window.__mixer2StarlordOnlyState = false; // Resets Table 2 Starlord Only OFF
-      window.__mixerFourFoldState = true; // Resets Mixer 4-Fold Toggle (ON by Default)
-      window.__mixerAddDispositorState = false; // <-- NEW: Resets Add Dispositor to OFF
-      window.__sixFoldExpanded = false; // Resets Six Fold open state
-      window.__nadiExpanded = false;    // Resets Nadi open state
-      VIM_CALIB_OFFSET_DAYS = 0; // Resets the Days Calibration shift
-      USE_KN_VIM = true; // Resets Kannada translation state
+      window.__lastBukthiMixerSelection = null;
+      window.__fourFoldState = true; 
+      window.__mixerUntenantedState = false; 
+      window.__mixerStarlordOnlyState = false; 
+      window.__mixer2UntenantedState = false; 
+      window.__mixer2StarlordOnlyState = false; 
+      window.__mixerFourFoldState = true; 
+      window.__mixerAddDispositorState = false; 
+      window.__sixFoldExpanded = false; 
+      window.__nadiExpanded = false;    
+      VIM_CALIB_OFFSET_DAYS = 0; 
+      USE_KN_VIM = true; 
+
+      // --- NEW: HARD RESET FOR DASHA BUKTHI ANTARA MIXER ---
+      window.__dba3Dasha = null;
+      window.__dba3DashaP = true;
+      window.__dba3DashaS = true;
+      window.__dba3BukthiP = true;
+      window.__dba3BukthiS = true;
+      window.__dba3AntaraP = true;
+      window.__dba3AntaraS = true;
+      window.__dba3Expanded = false;
+
       window.__lastSwissData = JSON.parse(reader.result);
 
       // 2. HARD RESET ALL DROPDOWNS & TEXT FIELDS
@@ -1629,7 +1641,7 @@ function loadSwissJSON(){
 
       // 3. HARD RESET ALL CHECKBOXES TO THEIR ORIGINAL HTML STATE
       const defaultCheckedIds = [
-		"kpMode", "trueNode", 
+		"kpMode", "trueNode", "originalASC",
         "useConjCusps", "ignoreRaKeLords", "hideVimDates", 
         "useMonthNames", "knVimToggle", "birthStartToggle", 
         "showAgeYears", "hideBhuktiAge" 
@@ -1637,8 +1649,7 @@ function loadSwissJSON(){
       
       const defaultUncheckedIds = [
 		  "sign2signMode", "vedicMode", 
-		  "originalASC", "showCusps",
-		  "useConjPlanets", "useAspects",
+		  "showCusps", "useConjPlanets", "useAspects",
 		  "includeRaKeCuspal", "splitSig", "splitSig2", 
 		  "ignoreUntenanted", "hideAntaraRest", "equalMode"
 		];
@@ -3293,30 +3304,44 @@ function buildDashaBukthiMixer() {
   }
   mixerWrap.innerHTML = "";
 
-  const headBar = document.createElement("div");
-  headBar.style.display = "flex";
-  headBar.style.justifyContent = "space-between";
-  headBar.style.alignItems = "center";
-  headBar.style.gap = "20px";
-  headBar.style.flexWrap = "wrap";
-  headBar.style.marginBottom = "15px";
+
+
+
+
+
+
+
+
+  // --- STATE INITIALIZATION FOR COLLAPSE ---
+  if (typeof window.__dbaMixerExpanded === 'undefined') {
+    window.__dbaMixerExpanded = false; // Collapsed by default
+  }
 
   const title = document.createElement("h2");
-  title.textContent = "DASHA & BUKTHI MIXER";
-  title.style.margin = "0";
+  title.innerHTML = "DASHA & BUKTHI MIXER <span style='font-size:18px;'>▼</span>";
+  title.style.margin = "0 0 20px 0";
   title.style.fontSize = "26px";
-  title.style.fontWeight = "500"; // Thinner font
- title.style.background = "linear-gradient(90deg,#10b981,#38bdf8)";
+  title.style.fontWeight = "500";
+  title.style.textAlign = "left"; // Forces left alignment, overriding global CSS
+  title.style.background = "linear-gradient(90deg,#10b981,#38bdf8)";
   title.style.webkitBackgroundClip = "text";
   title.style.webkitTextFillColor = "transparent";
+  title.style.cursor = "pointer";
 
+  const innerMixerWrap = document.createElement("div");
+  innerMixerWrap.style.display = window.__dbaMixerExpanded ? "block" : "none";
+  innerMixerWrap.style.width = "100%";
 
+  title.onclick = () => {
+    window.__dbaMixerExpanded = !window.__dbaMixerExpanded;
+    innerMixerWrap.style.display = window.__dbaMixerExpanded ? "block" : "none";
+    renderDashaDividerTable(); // Sync the Divider tables to collapse too
+  };
 
+  mixerWrap.appendChild(title);
+  mixerWrap.appendChild(innerMixerWrap);
 
-
-
-
-// --- STATE INITIALIZATION ---
+// --- STATE INITIALIZATION FOR TOGGLES ---
   if (typeof window.__mixerUntenantedState === 'undefined') {
     window.__mixerUntenantedState = false;
   }
@@ -3354,7 +3379,6 @@ function buildDashaBukthiMixer() {
   fourFoldMixerLabel.style.cursor = "pointer";
   fourFoldMixerLabel.innerHTML = `<input type="checkbox" id="mixerFourFoldToggle" ${window.__mixerFourFoldState ? 'checked' : ''}> 4 FOLD SIGNIFICATOR`;
 
-  // --- NEW: ADD DISPOSITOR TOGGLE ---
   const addDispLabel = document.createElement("label");
   addDispLabel.style.fontWeight = "900";
   addDispLabel.style.color = "#d4af37";
@@ -3365,47 +3389,37 @@ function buildDashaBukthiMixer() {
     window.__mixerUntenantedState = e.target.checked;
     buildDashaBukthiMixer(); 
   });
-
   starlordLabel.querySelector("input").addEventListener("change", (e) => {
     window.__mixerStarlordOnlyState = e.target.checked;
     buildDashaBukthiMixer(); 
   });
-
   fourFoldMixerLabel.querySelector("input").addEventListener("change", (e) => {
     window.__mixerFourFoldState = e.target.checked;
     buildDashaBukthiMixer(); 
   });
-
   addDispLabel.querySelector("input").addEventListener("change", (e) => {
     window.__mixerAddDispositorState = e.target.checked;
     buildDashaBukthiMixer(); 
   });
 
-  const titleGroup = document.createElement("div");
-  titleGroup.style.display = "flex";
-  titleGroup.style.alignItems = "center";
-  titleGroup.style.gap = "15px";
-  titleGroup.appendChild(title);
-  titleGroup.appendChild(untentLabel);
-  titleGroup.appendChild(starlordLabel);
-  titleGroup.appendChild(fourFoldMixerLabel); 
-  titleGroup.appendChild(addDispLabel); // Append new toggle
+  const cbGroup = document.createElement("div");
+  cbGroup.style.display = "flex";
+  cbGroup.style.alignItems = "center";
+  cbGroup.style.flexWrap = "wrap";
+  cbGroup.style.gap = "20px";
+  cbGroup.style.marginBottom = "20px";
+  cbGroup.appendChild(untentLabel);
+  cbGroup.appendChild(starlordLabel);
+  cbGroup.appendChild(fourFoldMixerLabel); 
+  cbGroup.appendChild(addDispLabel); 
 
-  headBar.appendChild(titleGroup);
+  innerMixerWrap.appendChild(cbGroup);
 
   const selWrap = document.createElement("div");
-  
-  
   selWrap.style.fontWeight = "500"; // Thinner font
   selWrap.style.color = "#d4af37";
   selWrap.innerHTML = `<span>Select Dasha Planet: </span>`;
 
-  
-  
-  
-  
-  
-  
   const select = document.createElement("select");
   select.id = "dashaMixerSelect"; // ID added for focus restoration
   select.style.background = "#010a08";
@@ -3420,7 +3434,6 @@ function buildDashaBukthiMixer() {
     window.__lastMixerSelection = currentDasha;
   }
 
-  // Reverted to single list for clean looping
   DASHA_ORDER.forEach(p => {
     let opt = document.createElement("option");
     opt.value = p;
@@ -3429,56 +3442,47 @@ function buildDashaBukthiMixer() {
     select.appendChild(opt);
   });
 
-  // Standard mouse click change
   select.onchange = (e) => {
     window.__lastMixerSelection = e.target.value;
     buildDashaBukthiMixer(); 
-    
-    // Restore focus immediately so arrow keys work on the first try
     setTimeout(() => {
       let restoredSelect = document.getElementById("dashaMixerSelect");
       if(restoredSelect) restoredSelect.focus();
     }, 0);
   };
 
-  // Keyboard cyclic infinite loop
   select.addEventListener("keydown", (e) => {
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-      e.preventDefault(); // Stop default browser scrolling
-
+      e.preventDefault();
       let currentIndex = select.selectedIndex;
       let total = select.options.length;
-
-      if (e.key === "ArrowDown") {
-        currentIndex = (currentIndex + 1) % total; // Loop to top
-      } else if (e.key === "ArrowUp") {
-        currentIndex = (currentIndex - 1 + total) % total; // Loop to bottom
-      }
-
+      if (e.key === "ArrowDown") currentIndex = (currentIndex + 1) % total;
+      else if (e.key === "ArrowUp") currentIndex = (currentIndex - 1 + total) % total;
       select.selectedIndex = currentIndex;
       window.__lastMixerSelection = select.value;
-      
       buildDashaBukthiMixer(); 
-
-      // Restore focus immediately after table redraw so you can keep typing
       setTimeout(() => {
         let restoredSelect = document.getElementById("dashaMixerSelect");
         if(restoredSelect) restoredSelect.focus();
       }, 0);
     }
   });
-  
-  
-  
-  
-  
-  
-  
-  
 
   selWrap.appendChild(select);
-  // Title is now appended via titleGroup above
-  mixerWrap.appendChild(headBar);
+
+  const selWrapContainer = document.createElement("div");
+  selWrapContainer.style.marginBottom = "15px";
+  selWrapContainer.appendChild(selWrap);
+  innerMixerWrap.appendChild(selWrapContainer);
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
   const table = document.createElement("table");
   table.style.width = "100%";
@@ -3665,7 +3669,7 @@ let dashaPlanet = select.value;
     table.appendChild(tr);
   });
 
-  mixerWrap.appendChild(table);
+  innerMixerWrap.appendChild(table);
   
   // Appends the dropdown wrapper right after the first table finishes
   const middleSelectWrap = document.createElement("div");
@@ -3673,7 +3677,7 @@ let dashaPlanet = select.value;
   middleSelectWrap.style.justifyContent = "center";
   middleSelectWrap.style.margin = "25px 0 10px 0";
   middleSelectWrap.appendChild(selWrap);
-  mixerWrap.appendChild(middleSelectWrap);
+  innerMixerWrap.appendChild(middleSelectWrap);
 
   // ==============================================================
   // --- NEW TABLE 2: BUKTHI TO ANTARA MIXER ---
@@ -3854,9 +3858,9 @@ let dashaPlanet = select.value;
   });
 
   // Append new elements to the view
-  mixerWrap.appendChild(table2ControlsWrap);
-  mixerWrap.appendChild(middleSelectWrap2);
-  mixerWrap.appendChild(table2);
+  innerMixerWrap.appendChild(table2ControlsWrap);
+	innerMixerWrap.appendChild(middleSelectWrap2);
+	innerMixerWrap.appendChild(table2);
   
   // Trigger Divider rendering when Mixer is drawn
   renderDashaDividerTable();
@@ -5307,6 +5311,16 @@ function renderDashaDividerTable() {
   const controls = document.getElementById("dashaDividerControls");
   
   if(!wrap || !controls) return;
+  
+  // Collapse completely if the parent mixer section is collapsed
+  if (window.__dbaMixerExpanded === false) {
+      controls.style.display = "none";
+      wrap.style.display = "none";
+      return;
+  } else {
+      wrap.style.display = "block"; // Reset
+  }
+
   if(!window.__lastMixedData || window.__lastMixedData.length === 0) {
     controls.style.display = "none";
     wrap.innerHTML = "";
@@ -5414,8 +5428,333 @@ setTimeout(() => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ======================================================
+   DASHA BUKTHI ANTARA (3-LEVEL) MIXER
+====================================================== */
+
+window.__dba3Dasha = null;
+window.__dba3DashaP = true;
+window.__dba3DashaS = true;
+window.__dba3BukthiP = true;
+window.__dba3BukthiS = true;
+window.__dba3AntaraP = true;
+window.__dba3AntaraS = true;
+
+function getMixer3Nums(p, showP, showS) {
+    let nums = [];
+    if(showP) {
+        let h = getPlanetHouse(p);
+        if(h) nums.push(parseInt(h));
+        let l = (p === "Rahu" || p === "Ketu") ? "" : getLordsOf(p);
+        if(l && l!=="-") l.split(",").forEach(x=>nums.push(parseInt(x)));
+    }
+    if(showS) {
+        let sl = getStarLord(p);
+        if(sl) {
+            let h = getPlanetHouse(sl);
+            if(h) nums.push(parseInt(h));
+            let l = (sl === "Rahu" || sl === "Ketu") ? "" : getLordsOf(sl);
+            if(l && l!=="-") l.split(",").forEach(x=>nums.push(parseInt(x)));
+        }
+    }
+    // Cuspal conjunction support
+    if(document.getElementById("useConjCusps")?.checked) {
+        let allowRaKe = document.getElementById("includeRaKeCuspal")?.checked;
+        if(showP && (allowRaKe || (p!=="Rahu" && p!=="Ketu"))) {
+            let c = getCuspalConjunct(p);
+            if(c && c!=="-") c.split(",").forEach(x=>nums.push(parseInt(x)));
+        }
+        if(showS) {
+            let sl = getStarLord(p);
+            if(sl && (allowRaKe || (sl!=="Rahu" && sl!=="Ketu"))) {
+                let c = getCuspalConjunct(sl);
+                if(c && c!=="-") c.split(",").forEach(x=>nums.push(parseInt(x)));
+            }
+        }
+    }
+    return [...new Set(nums.filter(x=>!isNaN(x)))].sort((a,b)=>a-b).join(",") || "-";
+}
+
+function buildDashaBukthiAntaraMixer() {
+    if (typeof window.__dba3Expanded === 'undefined') {
+        window.__dba3Expanded = false; // Collapsed by default
+    }
+
+    let wrap = document.getElementById("dba3MixerWrap");
+    if(!wrap) {
+        wrap = document.createElement("div");
+        wrap.id = "dba3MixerWrap";
+        wrap.style.marginTop = "50px";
+        wrap.style.marginBottom = "50px";
+        wrap.style.width = "100%";
+        wrap.style.maxWidth = "1400px";
+        wrap.style.marginLeft = "auto";
+        wrap.style.marginRight = "auto";
+        
+        let target = document.getElementById("dashaDividerTableWrap");
+        if(target) target.insertAdjacentElement("afterend", wrap);
+        else document.body.appendChild(wrap);
+    }
+    wrap.innerHTML = "";
+    if(!window.__lastSwissData) return;
+
+    // TITLE (Collapsible Trigger)
+    const title = document.createElement("h2");
+    title.innerHTML = "DASHA BUKTHI ANTARA MIXER <span style='font-size:18px;'>▼</span>";
+    title.style.margin = "0 0 20px 0";
+    title.style.fontSize = "26px";
+    title.style.fontWeight = "500";
+    title.style.textAlign = "left"; // Forces left alignment, overriding global CSS
+    title.style.background = "linear-gradient(90deg,#10b981,#38bdf8)";
+    title.style.webkitBackgroundClip = "text";
+    title.style.webkitTextFillColor = "transparent";
+    title.style.cursor = "pointer";
+    wrap.appendChild(title);
+
+    // INNER CONTAINER (For expanding/collapsing)
+    const innerWrap = document.createElement("div");
+    innerWrap.style.display = window.__dba3Expanded ? "block" : "none";
+    innerWrap.style.width = "100%";
+    wrap.appendChild(innerWrap);
+
+    title.onclick = () => {
+        window.__dba3Expanded = !window.__dba3Expanded;
+        innerWrap.style.display = window.__dba3Expanded ? "block" : "none";
+    };
+
+    // START TABS FROM BIRTH STARLORD OF MOON
+    let birthStarlord = getStarLord("Chandra") || "Ketu";
+    let startIndex = DASHA_ORDER.indexOf(birthStarlord);
+    let order = [...DASHA_ORDER.slice(startIndex), ...DASHA_ORDER.slice(0, startIndex)];
+    
+    // SELECT THE CURRENT RUNNING MAHADASHA BY DEFAULT
+    let currentMaha = getCurrentMahadasha("Chandra");
+
+    if(!window.__dba3Dasha || !DASHA_ORDER.includes(window.__dba3Dasha)) {
+        window.__dba3Dasha = currentMaha;
+        // Dynamic Untenanted behavior on load for the selected planet
+        if (getUntenantedPlanets().includes(window.__dba3Dasha)) {
+            window.__dba3DashaP = true;
+            window.__dba3DashaS = false;
+        } else {
+            window.__dba3DashaP = true;
+            window.__dba3DashaS = true;
+        }
+    }
+
+    // TABS (9 Planets)
+    let tabsDiv = document.createElement("div");
+    tabsDiv.style = "display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:20px;";
+    order.forEach(p => {
+        let btn = document.createElement("button");
+        btn.innerHTML = getPlanetLabel(p); // No brackets
+        btn.style.background = (p === window.__dba3Dasha) ? "linear-gradient(135deg,#10b981,#d4af37)" : "#010a08";
+        btn.style.color = (p === window.__dba3Dasha) ? "#021b16" : "#10b981";
+        btn.style.border = "1px solid #10b981";
+        btn.style.padding = "6px 16px";
+        btn.style.cursor = "pointer";
+        btn.style.fontWeight = "900";
+        
+        btn.onclick = () => {
+            window.__dba3Dasha = p;
+            // Dynamic Untenanted behavior: Check Planet, Uncheck Starlord, but leave fully clickable
+            if (getUntenantedPlanets().includes(p)) {
+                window.__dba3DashaP = true;
+                window.__dba3DashaS = false; 
+            } else {
+                window.__dba3DashaP = true;
+                window.__dba3DashaS = true;
+            }
+            buildDashaBukthiAntaraMixer();
+        };
+        tabsDiv.appendChild(btn);
+    });
+    innerWrap.appendChild(tabsDiv);
+
+    // CHECKBOXES (6 Total - Fully Unlocked)
+    let cbDiv = document.createElement("div");
+    cbDiv.style = "display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; text-align:center; margin-bottom:50px;"; // Changed 20px to 50px for the top gap
+
+
+
+
+
+
+
+
+
+
+
+
+
+    function createCbCol(titleStr, pVar, sVar) {
+        let col = document.createElement("div");
+        col.style = "border:1px solid #10b981; padding:10px; background:linear-gradient(180deg,#021b16,#010a08);";
+        let h3 = document.createElement("h3");
+        h3.style = "margin:0 0 10px 0; color:#d4af37; font-size:18px;";
+        h3.textContent = titleStr;
+
+        let pLabel = document.createElement("label");
+        pLabel.style = "margin-right:15px; font-weight:900; color:#ecfdf5; cursor:pointer;";
+        let pInput = document.createElement("input");
+        pInput.type = "checkbox";
+        pInput.checked = window[pVar];
+
+        let sLabel = document.createElement("label");
+        sLabel.style = "font-weight:900; color:#ecfdf5; cursor:pointer;";
+        let sInput = document.createElement("input");
+        sInput.type = "checkbox";
+        sInput.checked = window[sVar];
+
+        pInput.onchange = (e) => { window[pVar] = e.target.checked; buildDashaBukthiAntaraMixer(); };
+        sInput.onchange = (e) => { window[sVar] = e.target.checked; buildDashaBukthiAntaraMixer(); };
+
+        pLabel.appendChild(pInput); pLabel.appendChild(document.createTextNode(" Planet"));
+        sLabel.appendChild(sInput); sLabel.appendChild(document.createTextNode(" Starlord"));
+
+        col.appendChild(h3);
+        col.appendChild(pLabel);
+        col.appendChild(sLabel);
+        return col;
+    }
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+    cbDiv.appendChild(createCbCol("Dasha", "__dba3DashaP", "__dba3DashaS"));
+    cbDiv.appendChild(createCbCol("Bukthi", "__dba3BukthiP", "__dba3BukthiS"));
+    cbDiv.appendChild(createCbCol("Antara", "__dba3AntaraP", "__dba3AntaraS"));
+    innerWrap.appendChild(cbDiv);
+
+    // 81-ROW TABLE WITH 9 ISLANDS
+    const table = document.createElement("table");
+    table.style.width = "100%";
+    table.style.borderCollapse = "collapse";
+    table.style.background = "transparent"; // Made transparent to show gaps
+    
+	
+	
+	
+    // Header
+    let trHead = document.createElement("tr");
+    
+    // Theme-accurate jewel tone gradient: Deep Emerald -> Royal Blue -> Rich Violet
+    trHead.style.background = "linear-gradient(90deg, #064e3b 0%, #1e3a8a 50%, #4a044e 100%)";
+    
+    // Kept the thick black outline & drop shadow so the big text still pops
+    let outlineCSS = "-webkit-text-stroke: 1.5px #000; text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;";
+    
+    trHead.innerHTML = `
+        <th style="border:1px solid #10b981; padding:16px; font-weight:900; font-size:26px; letter-spacing:2px; text-transform:uppercase; color:#38bdf8; ${outlineCSS}">Dasha</th>
+        <th style="border:1px solid #10b981; padding:16px; font-weight:900; font-size:26px; letter-spacing:2px; text-transform:uppercase; color:#f472b6; ${outlineCSS}">Bukthi</th>
+        <th style="border:1px solid #10b981; padding:16px; font-weight:900; font-size:26px; letter-spacing:2px; text-transform:uppercase; color:#a855f7; ${outlineCSS}">Antara</th>
+    `;
+    table.appendChild(trHead);
+	
+	
+	
+	
+
+    // Insert visual gap above the first Bukthi island
+    let initialGap = document.createElement("tr");
+    initialGap.innerHTML = `<td colspan="3" style="height:50px; border:none;"></td>`; // Changed 70px to 50px for the bottom gap
+    table.appendChild(initialGap);
+
+    let dPlanet = window.__dba3Dasha;
+	
+	
+	
+    let dIndex = DASHA_ORDER.indexOf(dPlanet);
+    let bukthiOrder = [...DASHA_ORDER.slice(dIndex), ...DASHA_ORDER.slice(0, dIndex)];
+    let dNums = getMixer3Nums(dPlanet, window.__dba3DashaP, window.__dba3DashaS);
+
+    bukthiOrder.forEach((bPlanet, bIdx) => {
+        let bIndex = DASHA_ORDER.indexOf(bPlanet);
+        let antaraOrder = [...DASHA_ORDER.slice(bIndex), ...DASHA_ORDER.slice(0, bIndex)];
+        let bNums = getMixer3Nums(bPlanet, window.__dba3BukthiP, window.__dba3BukthiS);
+
+        antaraOrder.forEach(aPlanet => {
+            let aNums = getMixer3Nums(aPlanet, window.__dba3AntaraP, window.__dba3AntaraS);
+            let tr = document.createElement("tr");
+            tr.style.background = "#010a08"; // Paint the data rows
+            tr.innerHTML = `
+                <td style="border:1px solid #10b981; padding:6px; font-weight:500; text-align:center;">
+                    ${getPlanetLabel(dPlanet)} - <span style="color:#38bdf8;">${dNums}</span>
+                </td>
+                <td style="border:1px solid #10b981; padding:6px; font-weight:500; text-align:center;">
+                    ${getPlanetLabel(bPlanet)} - <span style="color:#f472b6;">${bNums}</span>
+                </td>
+                <td style="border:1px solid #10b981; padding:6px; font-weight:500; text-align:center;">
+                    ${getPlanetLabel(aPlanet)} - <span style="color:#a855f7;">${aNums}</span>
+                </td>
+            `;
+            table.appendChild(tr);
+        });
+
+        // Insert visual gap (Island Split) after each Bukthi chunk of 9 rows, except the last one
+        if (bIdx < bukthiOrder.length - 1) {
+            let gap = document.createElement("tr");
+            gap.innerHTML = `<td colspan="3" style="height:70px; border:none;"></td>`;
+            table.appendChild(gap);
+        }
+    });
+
+    innerWrap.appendChild(table);
+}
+
+if (typeof window.__oldBuildVim === "undefined") {
+    window.__oldBuildVim = buildVimshottari;
+    buildVimshottari = function() {
+        window.__oldBuildVim();
+        buildDashaBukthiAntaraMixer();
+    };
+}
+
+setTimeout(buildDashaBukthiAntaraMixer, 100);
+
+
+
+
+
+
+
+
+
+
+
+
+
 </script>
+
 
 </body>
 </html>
-// 🔥 UNEQUAL PLACIDUS MODE: Anchored perfectly to the Planet 🔥
