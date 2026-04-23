@@ -5463,40 +5463,153 @@ window.__dba3BukthiS = true;
 window.__dba3AntaraP = true;
 window.__dba3AntaraS = true;
 
-function getMixer3Nums(p, showP, showS) {
+// NEW: Global state for the View modes (Split on by default)
+if (typeof window.__dba3NormalView === 'undefined') window.__dba3NormalView = false;
+if (typeof window.__dba3SplitView === 'undefined') window.__dba3SplitView = true;
+
+
+
+
+
+
+
+
+
+
+
+// NEW: Helper function to generate the "House-Lords" format
+// NEW: Helper function to generate the "House-Lords" format
+function buildSplitBlock(ent) {
+    if(!ent) return "";
+    let h = getPlanetHouse(ent);
     let nums = [];
-    if(showP) {
-        let h = getPlanetHouse(p);
-        if(h) nums.push(parseInt(h));
-        let l = (p === "Rahu" || p === "Ketu") ? "" : getLordsOf(p);
-        if(l && l!=="-") l.split(",").forEach(x=>nums.push(parseInt(x)));
+    
+    let l = (ent === "Rahu" || ent === "Ketu") ? "" : getLordsOf(ent);
+    if(l && l !== "-") {
+        l.split(",").forEach(x => nums.push(parseInt(x)));
     }
-    if(showS) {
-        let sl = getStarLord(p);
-        if(sl) {
-            let h = getPlanetHouse(sl);
-            if(h) nums.push(parseInt(h));
-            let l = (sl === "Rahu" || sl === "Ketu") ? "" : getLordsOf(sl);
-            if(l && l!=="-") l.split(",").forEach(x=>nums.push(parseInt(x)));
-        }
-    }
-    // Cuspal conjunction support
-    if(document.getElementById("useConjCusps")?.checked) {
-        let allowRaKe = document.getElementById("includeRaKeCuspal")?.checked;
-        if(showP && (allowRaKe || (p!=="Rahu" && p!=="Ketu"))) {
-            let c = getCuspalConjunct(p);
-            if(c && c!=="-") c.split(",").forEach(x=>nums.push(parseInt(x)));
-        }
-        if(showS) {
-            let sl = getStarLord(p);
-            if(sl && (allowRaKe || (sl!=="Rahu" && sl!=="Ketu"))) {
-                let c = getCuspalConjunct(sl);
-                if(c && c!=="-") c.split(",").forEach(x=>nums.push(parseInt(x)));
+
+    // --- NEW: INJECT DISPOSITOR (SPLIT VIEW) ---
+    if (window.__dba3AddDispositor && (ent === "Rahu" || ent === "Ketu")) {
+        let sign = getPlanetSign(ent);
+        let disp = SIGN_LORDS[sign];
+        if (disp) {
+            let dHouse = getPlanetHouse(disp);
+            if (dHouse) nums.push(parseInt(dHouse));
+            let dLords = getLordsOf(disp);
+            if (dLords && dLords !== "-") {
+                dLords.split(",").forEach(x => nums.push(parseInt(x)));
             }
         }
     }
-    return [...new Set(nums.filter(x=>!isNaN(x)))].sort((a,b)=>a-b).join(",") || "-";
+
+    // Cuspal conjunction support
+    if(document.getElementById("useConjCusps")?.checked) {
+        let allowRaKe = document.getElementById("includeRaKeCuspal")?.checked;
+        if(allowRaKe || (ent !== "Rahu" && ent !== "Ketu")) {
+            let c = getCuspalConjunct(ent);
+            if(c && c !== "-") c.split(",").forEach(x => nums.push(parseInt(x)));
+        }
+    }
+
+    // Deduplicate and sort only the lordships/cusps
+    nums = [...new Set(nums.filter(x => !isNaN(x)))].sort((a,b) => a - b);
+    
+    // Format perfectly as House-Lords without deleting the house duplicate
+    if(!h) return nums.join(",") || "-";
+    if(nums.length === 0) return `${h}`;
+    return `${h}-${nums.join(",")}`;
 }
+
+// UPDATED: Main extraction logic to handle both views (with duplicates allowed in Normal View)
+function getMixer3Nums(p, showP, showS) {
+    if (window.__dba3SplitView) {
+        let pBlock = "";
+        let sBlock = "";
+
+        if (showP) {
+            pBlock = buildSplitBlock(p);
+        }
+        if (showS) {
+            let sl = getStarLord(p);
+            if (sl) sBlock = buildSplitBlock(sl);
+        }
+
+        if (pBlock && sBlock) return `${pBlock} + ${sBlock}`;
+        if (pBlock) return pBlock;
+        if (sBlock) return sBlock;
+        return "-";
+    } else {
+        // NORMAL VIEW LOGIC (Duplicates Allowed)
+        let nums = [];
+        if(showP) {
+            let h = getPlanetHouse(p);
+            if(h) nums.push(parseInt(h));
+            let l = (p === "Rahu" || p === "Ketu") ? "" : getLordsOf(p);
+            if(l && l!=="-") l.split(",").forEach(x=>nums.push(parseInt(x)));
+
+            // --- NEW: INJECT DISPOSITOR (NORMAL VIEW) ---
+            if (window.__dba3AddDispositor && (p === "Rahu" || p === "Ketu")) {
+                let sign = getPlanetSign(p);
+                let disp = SIGN_LORDS[sign];
+                if (disp) {
+                    let dHouse = getPlanetHouse(disp);
+                    if (dHouse) nums.push(parseInt(dHouse));
+                    let dLords = getLordsOf(disp);
+                    if (dLords && dLords !== "-") {
+                        dLords.split(",").forEach(x => nums.push(parseInt(x)));
+                    }
+                }
+            }
+        }
+        if(showS) {
+            let sl = getStarLord(p);
+            if(sl) {
+                let h = getPlanetHouse(sl);
+                if(h) nums.push(parseInt(h));
+                let l = (sl === "Rahu" || sl === "Ketu") ? "" : getLordsOf(sl);
+                if(l && l!=="-") l.split(",").forEach(x=>nums.push(parseInt(x)));
+
+                // --- NEW: INJECT DISPOSITOR (NORMAL VIEW) ---
+                if (window.__dba3AddDispositor && (sl === "Rahu" || sl === "Ketu")) {
+                    let sign = getPlanetSign(sl);
+                    let disp = SIGN_LORDS[sign];
+                    if (disp) {
+                        let dHouse = getPlanetHouse(disp);
+                        if (dHouse) nums.push(parseInt(dHouse));
+                        let dLords = getLordsOf(disp);
+                        if (dLords && dLords !== "-") {
+                            dLords.split(",").forEach(x => nums.push(parseInt(x)));
+                        }
+                    }
+                }
+            }
+        }
+        if(document.getElementById("useConjCusps")?.checked) {
+            let allowRaKe = document.getElementById("includeRaKeCuspal")?.checked;
+            if(showP && (allowRaKe || (p!=="Rahu" && p!=="Ketu"))) {
+                let c = getCuspalConjunct(p);
+                if(c && c!=="-") c.split(",").forEach(x=>nums.push(parseInt(x)));
+            }
+            if(showS) {
+                let sl = getStarLord(p);
+                if(sl && (allowRaKe || (sl!=="Rahu" && sl!=="Ketu"))) {
+                    let c = getCuspalConjunct(sl);
+                    if(c && c!=="-") c.split(",").forEach(x=>nums.push(parseInt(x)));
+                }
+            }
+        }
+        // Retain duplicates for Normal View
+        return nums.filter(x=>!isNaN(x)).sort((a,b)=>a-b).join(",") || "-";
+    }
+}
+
+
+
+
+
+
+
 
 function buildDashaBukthiAntaraMixer() {
     if (typeof window.__dba3Expanded === 'undefined') {
@@ -5593,6 +5706,76 @@ function buildDashaBukthiAntaraMixer() {
         tabsDiv.appendChild(btn);
     });
     innerWrap.appendChild(tabsDiv);
+
+    // ==========================================
+    // NEW: VIEW TOGGLES (Normal vs Split View)
+    // ==========================================
+    let viewToggleWrap = document.createElement("div");
+    viewToggleWrap.style = "display:flex; justify-content:center; gap:30px; margin-bottom:25px;";
+
+    let normalLabel = document.createElement("label");
+    normalLabel.style = "font-weight:900; color:#d4af37; cursor:pointer; font-size:18px;";
+    let normalCb = document.createElement("input");
+    normalCb.type = "checkbox";
+    normalCb.checked = window.__dba3NormalView;
+
+    let splitLabel = document.createElement("label");
+    splitLabel.style = "font-weight:900; color:#d4af37; cursor:pointer; font-size:18px;";
+    let splitCb = document.createElement("input");
+    splitCb.type = "checkbox";
+    splitCb.checked = window.__dba3SplitView;
+
+    // Mutual exclusivity logic
+    normalCb.onchange = (e) => {
+        if (e.target.checked) {
+            window.__dba3NormalView = true;
+            window.__dba3SplitView = false;
+        } else {
+            window.__dba3NormalView = false;
+            window.__dba3SplitView = true; // Fallback to ensure one is always active
+        }
+        buildDashaBukthiAntaraMixer();
+    };
+
+    splitCb.onchange = (e) => {
+        if (e.target.checked) {
+            window.__dba3SplitView = true;
+            window.__dba3NormalView = false;
+        } else {
+            window.__dba3SplitView = false;
+            window.__dba3NormalView = true;
+        }
+        buildDashaBukthiAntaraMixer();
+    };
+
+    normalLabel.appendChild(normalCb);
+    normalLabel.appendChild(document.createTextNode(" Normal View"));
+
+    splitLabel.appendChild(splitCb);
+    splitLabel.appendChild(document.createTextNode(" Split View"));
+
+    // --- NEW: ADD DISPOSITOR CHECKBOX ---
+    if (typeof window.__dba3AddDispositor === 'undefined') window.__dba3AddDispositor = false;
+
+    let dispLabel = document.createElement("label");
+    dispLabel.style = "font-weight:900; color:#d4af37; cursor:pointer; font-size:18px; margin-left:15px;";
+    let dispCb = document.createElement("input");
+    dispCb.type = "checkbox";
+    dispCb.checked = window.__dba3AddDispositor;
+
+    dispCb.onchange = (e) => {
+        window.__dba3AddDispositor = e.target.checked;
+        buildDashaBukthiAntaraMixer();
+    };
+
+    dispLabel.appendChild(dispCb);
+    dispLabel.appendChild(document.createTextNode(" Add Dispositor"));
+
+    viewToggleWrap.appendChild(normalLabel);
+    viewToggleWrap.appendChild(splitLabel);
+    viewToggleWrap.appendChild(dispLabel); // Append new toggle
+    innerWrap.appendChild(viewToggleWrap);
+    // ==========================================
 
     // CHECKBOXES (6 Total - Fully Unlocked)
     let cbDiv = document.createElement("div");
