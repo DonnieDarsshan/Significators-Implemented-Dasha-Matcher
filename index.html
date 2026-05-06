@@ -72,6 +72,217 @@ button{
   margin:14px 0;
 }
 
+
+
+
+
+#onlineFetchBox { 
+
+    background: #0a0a0a; 
+
+    border: 1px solid var(--grid-line); 
+
+    padding: 18px 22px; 
+
+    margin: 16px auto 30px auto; 
+
+    display: flex; 
+
+    flex-direction: column;
+
+    gap: 15px; 
+
+    color: var(--text-white); 
+
+    font-weight: 700; 
+
+    max-width: 1500px;
+
+}
+
+
+
+.fetch-row {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 20px;
+
+    align-items: flex-end; 
+
+    width: 100%;
+
+}
+
+
+
+#onlineFetchBox .form-group {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 6px;
+
+}
+
+
+
+#onlineFetchBox input,
+
+#onlineFetchBox select { 
+
+    background: #111; 
+
+    color: var(--asc-yellow); 
+
+    border: 1px solid var(--grid-line); 
+
+    padding: 6px 10px; 
+
+    font-weight: 700; 
+
+    outline: none;
+
+}
+
+
+
+#onlineFetchBox input:focus,
+
+#onlineFetchBox select:focus {
+
+    border-color: #10b981;
+
+}
+
+
+
+#onlineFetchBox select {
+
+    cursor: pointer;
+
+}
+
+
+
+#onlineFetchBox select option {
+
+    background: #0c0505;
+
+    color: #facc15;
+
+}
+
+
+
+/* --- EGYPTIAN THEMED BUTTONS --- */
+
+.action-btn {
+
+    font-weight: 900;
+
+    font-size: 14px;
+
+    padding: 4px 10px;
+
+    margin: 0;
+
+    cursor: pointer;
+
+    color: #facc15; 
+
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9); 
+
+    border: 2px solid #b8860b; 
+
+    border-radius: 4px; 
+
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.6),
+
+                inset 0 1px 2px rgba(255, 255, 255, 0.15);
+
+    transition: all 0.1s ease;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.5px;
+
+}
+
+
+
+.action-btn:hover {
+
+    filter: brightness(1.25);
+
+}
+
+
+
+.action-btn:active {
+
+    transform: translateY(2px);
+
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.6),
+
+                inset 0 1px 2px rgba(255, 255, 255, 0.1);
+
+}
+
+
+
+.btn-clear {
+
+    background: linear-gradient(to bottom, #475569, #1e293b);
+
+}
+
+
+
+.btn-load {
+
+    background: linear-gradient(to bottom, #9f361a, #521606);
+
+}
+
+
+
+.btn-save {
+
+    background: linear-gradient(to bottom, #1e3a8a, #0f172a);
+
+}
+
+
+
+.btn-fetch {
+
+    background: linear-gradient(to bottom, #059669, #022c22);
+
+}
+
+
+
+.btn-fetch.success {
+
+    background: #39ff14 !important;
+
+    color: #000 !important;
+
+    text-shadow: none !important;
+
+    border-color: #00cc00 !important;
+
+}
+
+
+
+
+
+
 .pivotBar{
   display:flex;
   justify-content:center;
@@ -244,6 +455,104 @@ button{
 
 <h2>Vedic Significators To Dasha Matcher</h2>
 
+
+
+
+
+
+
+
+
+
+
+
+
+<div id="onlineFetchBox" style="background: #050505; border: 1px solid #10b981; border-radius: 8px; padding: 20px; margin: 20px auto 30px auto; max-width: 1400px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 18px;">
+        <div style="color: #10b981; font-size: 16px; font-weight: 900; letter-spacing: 1px;">&#x1F310; CLOUD HOROSCOPE FETCHER</div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <span style="color: #ccc; font-size: 13px; font-weight: bold;">Profile Name:</span>
+            <input type="text" id="onName" placeholder="e.g. Name" style="width: 200px; background: #111; border: 1px solid #10b981; color: #fff; padding: 4px; text-align: center; text-transform: uppercase; font-weight: bold;">
+        </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; align-items: center; margin-bottom: 20px;">
+        
+        <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+            <span style="color:#ecfdf5; font-weight:bold; font-size:14px;">&#x1F4C5; Date (DD-MM-YYYY)</span>
+            <div style="display:flex; gap:6px;">
+                <input type="text" id="onDay" placeholder="DD" maxlength="2" style="width:45px; text-align:center; background:#111; border:1px solid #333; color:#facc15;" onkeydown="arrowSpinner(event, 1, 31, 2)" oninput="smartJump(this, 'onMonth')"> -
+                <input type="text" id="onMonth" placeholder="MM" maxlength="2" style="width:45px; text-align:center; background:#111; border:1px solid #333; color:#facc15;" onkeydown="arrowSpinner(event, 1, 12, 2)" oninput="smartJump(this, 'onYear')"> -
+                <input type="text" id="onYear" placeholder="YYYY" maxlength="4" style="width:65px; text-align:center; background:#111; border:1px solid #333; color:#facc15;" onkeydown="arrowSpinner(event, 1900, 2100, 4)" oninput="smartJump(this, 'onHour')">
+            </div>
+        </div>
+
+        <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+            <span style="color:#ecfdf5; font-weight:bold; font-size:14px;">&#x23F1; Time (HH:MM:SS)</span>
+            <div style="display:flex; gap:6px;">
+                <input type="text" id="onHour" placeholder="HH" maxlength="2" style="width:45px; text-align:center; background:#111; border:1px solid #333; color:#facc15;" onkeydown="arrowSpinner(event, 0, 23, 2)" oninput="smartJump(this, 'onMin')"> :
+                <input type="text" id="onMin" placeholder="MM" maxlength="2" style="width:45px; text-align:center; background:#111; border:1px solid #333; color:#facc15;" onkeydown="arrowSpinner(event, 0, 59, 2)" oninput="smartJump(this, 'onSec')"> :
+                <input type="text" id="onSec" value="00" maxlength="2" style="width:45px; text-align:center; background:#111; border:1px solid #333; color:#facc15;" onkeydown="arrowSpinner(event, 0, 59, 2)" oninput="smartJump(this, 'mapSearchQuery')">
+            </div>
+        </div>
+        
+        <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+            <span style="color:#ecfdf5; font-weight:bold; font-size:14px;">&#x1F4CD; Standard Places</span>
+            <select id="locationPreset" onchange="applyPresetLocation()" style="background:#111; border:1px solid #333; color:#facc15; padding:6px; font-weight:bold; cursor:pointer;">
+                <option value="manual">Manual GPS (Default)</option>
+                <option value="13.3190737,77.1326306">Tumakuru</option>
+                <option value="12.918880,77.634986">Bengaluru</option>
+                <option value="13.315527,76.942059">Gubbi</option>
+                <option value="12.304776,76.655108">Mysore</option>
+            </select>
+        </div>
+
+        <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+            <span style="color:#ecfdf5; font-weight:bold; font-size:14px;">&#x1F4CD; Coordinates</span>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="onlineLat" value="13.3190737" placeholder="Lat" style="width: 100px; background:#111; border:1px solid #333; color:#facc15; padding:4px;">
+                <input type="text" id="onlineLon" value="77.1326306" placeholder="Lon" style="width: 100px; background:#111; border:1px solid #333; color:#facc15; padding:4px;">
+            </div>
+        </div>
+    </div>
+    
+    <div style="border-top: 1px solid #333; padding-top: 15px; margin-bottom: 15px;">
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+            <span style="color:#ecfdf5; font-weight:bold; font-size:14px;">&#x1F50D; Online Map Search (Powered by OpenStreetMap)</span>
+            <div style="display:flex; gap:10px; align-items: center; flex-wrap: wrap;">
+                <input type="text" id="mapSearchQuery" placeholder="e.g. Kyathsandra" style="width: 250px; background:#111; border:1px solid #10b981; color:#fff; padding:6px; font-weight:bold;" onkeydown="if(event.key === 'Enter') searchOnlineMap()">
+                <button onclick="searchOnlineMap()" style="background: #10b981; color: #000; border: none; padding: 7px 15px; font-weight: bold; cursor: pointer; border-radius: 4px;">Search Map</button>
+                <select id="mapSearchResults" style="display:none; width: 350px; background:#111; border:1px solid #10b981; color:#facc15; padding:6px; font-weight:bold; cursor:pointer;" onchange="applyMapSelection()"></select>
+            </div>
+        </div>
+    </div>
+    
+    <div style="border-top: 1px solid #333; padding-top: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        
+        <div id="serverWakeContainer" style="visibility: hidden; display: flex; flex-direction: column; gap: 4px; font-family: monospace; font-weight: bold;">
+            <span id="wakeMessage" style="color: #facc15; font-size: 14px;">> SYS.WAKE...</span>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');</style>
+                <span id="digitalClockPart" style="font-family: 'Orbitron', sans-serif; font-size: 28px; letter-spacing: 2px; background: linear-gradient(180deg, #fff7cc 0%, #facc15 50%, #b8860b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0px 0px 8px rgba(250, 204, 21, 0.8));">00:30</span>
+                <span id="progressBarPart" style="color: #facc15; font-size: 16px; letter-spacing: 1px; text-shadow: 0 0 8px #facc15;">[....................]</span>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; align-items: center; margin-left: auto;">
+            <button class="action-btn btn-clear" onclick="clearFetchData()">&#x1F9F9; Clear</button>
+            <input type="file" id="loadProfileInput" accept=".json" style="display:none" onchange="loadCloudProfile(event)">
+            <button class="action-btn btn-load" onclick="document.getElementById('loadProfileInput').click()">&#x1F4C2; Load Profile</button>
+            <button class="action-btn btn-save" onclick="saveCloudProfile()">&#x1F4BE; Save Profile</button>
+            <button id="fetchCloudBtn" class="action-btn btn-fetch" onclick="fetchFromCloud()">Fetch Data &#x1F4E1;</button>
+        </div>
+    </div>
+</div>
+
+
+
+
+
 <div class="controls">
   <button onclick="loadSwissJSON()">Load Swiss Ephemeris</button>
 </div>
@@ -277,7 +586,8 @@ button{
   display:flex;
   flex-wrap:wrap;
   justify-content:center;
-  gap:30px;
+  align-items:center;
+  gap:20px;
   margin-top:15px;
   padding:12px;
   background:linear-gradient(180deg,#021b16,#010a08);
@@ -290,12 +600,11 @@ button{
   <label><input type="checkbox" id="useAspects" > Aspects</label>
   <label><input type="checkbox" id="useConjCusps" checked> Conjunct Cuspal</label>
   <label><input type="checkbox" id="ignoreRaKeLords" checked> Ignore Ra/Ke Lords</label>
- <label><input type="checkbox" id="includeRaKeCuspal"> Ra/Ke Cuspal</label>
- <label><input type="checkbox" id="splitSig"> Split</label>
-
-  <label><input type="checkbox" id="splitSig2"> Split 2</label>
- <label><input type="checkbox" id="ignoreUntenanted"> UNTENTED</label>
-
+  <label><input type="checkbox" id="includeRaKeCuspal"> Ra/Ke Cuspal</label>
+  <label><input type="checkbox" id="splitSig"> Split</label>
+  <label><input type="checkbox" id="splitSig2" checked> Split 2</label>
+  <label><input type="checkbox" id="ignoreUntenanted"> UNTENTED</label>
+  <label style="color:#10b981; border:1px solid #10b981; padding:4px 10px; border-radius:6px; background:#010a08;"><input type="checkbox" id="rahuKetuSpecial" checked> Ra/Ke Special Rule</label>
 </div>
 
 
@@ -1006,7 +1315,8 @@ function getCuspalConjunct(entity){
     let diff=Math.abs(abs-shifted);
     if(diff>180) diff=360-diff;
 
-    if(diff<=3){
+    // CHANGED FROM 3 TO 5
+    if(diff<=4){
       result.push(c);
     }
   }
@@ -1055,6 +1365,31 @@ function getAspectHouses(entity){
   // default 7th aspect
   return [ (house+6-1)%12+1 ].join(",");
 }
+
+function getAspectedBy(entity){
+  if(entity !== "Rahu" && entity !== "Ketu") return "-";
+  let targetHouse = getPlanetHouse(entity);
+  if(!targetHouse) return "-";
+  
+  let standardPlanets = ["Surya", "Chandra", "Mangala", "Budha", "Jupiter", "Venus", "Saturn"];
+  let aspecting = [];
+  
+  standardPlanets.forEach(p => {
+    let aspects = getAspectHouses(p);
+    if(aspects && aspects.split(",").includes(String(targetHouse))){
+      let pHouse = getPlanetHouse(p) || "-";
+      let pLords = getLordsOf(p) || "-";
+      aspecting.push(`${p}(${pHouse},${pLords})`);
+    }
+  });
+  
+  return aspecting.join(" ") || "-";
+}
+
+
+
+
+
 
 
 
@@ -1575,6 +1910,528 @@ function drawSIKundali(){
 
 
 
+/* ======================================
+   MAP SEARCH & UI HELPERS
+====================================== */
+
+// Fetches coordinates from free OpenStreetMap API
+async function searchOnlineMap() {
+    const query = document.getElementById("mapSearchQuery").value.trim();
+    const resultsSelect = document.getElementById("mapSearchResults");
+
+    if (!query) {
+        resultsSelect.style.display = "none";
+        return;
+    }
+
+    // Show searching state
+    resultsSelect.style.display = "inline-block";
+    resultsSelect.innerHTML = "<option>Searching...</option>";
+
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=10`);
+        const data = await response.json();
+
+        resultsSelect.innerHTML = ""; 
+
+        if (data && data.length > 0) {
+            let defaultOpt = document.createElement("option");
+            defaultOpt.text = "📍 Select a location match...";
+            defaultOpt.value = "";
+            resultsSelect.appendChild(defaultOpt);
+
+            data.forEach(place => {
+                let opt = document.createElement("option");
+                opt.value = `${place.lat},${place.lon}`;
+                opt.text = place.display_name;
+                resultsSelect.appendChild(opt);
+            });
+        } else {
+            resultsSelect.innerHTML = "<option value=''>❌ No results found</option>";
+        }
+    } catch (error) {
+        console.error("Map search error:", error);
+        resultsSelect.innerHTML = "<option value=''>⚠️ Error fetching results</option>";
+    }
+}
+
+// Applies the selected dropdown map result to the Lat/Lon inputs
+function applyMapSelection() {
+    const resultsSelect = document.getElementById("mapSearchResults");
+    const val = resultsSelect.value;
+    if (val) {
+        const [lat, lon] = val.split(",");
+        document.getElementById("onlineLat").value = parseFloat(lat).toFixed(6);
+        document.getElementById("onlineLon").value = parseFloat(lon).toFixed(6);
+    }
+}
+
+// Applies the Standard Places Preset dropdown
+function applyPresetLocation() {
+    const preset = document.getElementById("locationPreset").value;
+    if (preset !== "manual") {
+        const [lat, lon] = preset.split(",");
+        document.getElementById("onlineLat").value = parseFloat(lat).toFixed(6);
+        document.getElementById("onlineLon").value = parseFloat(lon).toFixed(6);
+    }
+}
+
+// Helper: Auto-jumps to next input field when max length is reached
+function smartJump(currentElem, nextFieldId) {
+    if (currentElem.value.length >= currentElem.maxLength) {
+        let nextEl = document.getElementById(nextFieldId);
+        if (nextEl) nextEl.focus();
+    }
+}
+
+// Helper: Allows using Up/Down arrows to spin numbers in date/time inputs
+function arrowSpinner(e, min, max, padLength) {
+    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+        e.preventDefault();
+        let val = parseInt(e.target.value) || 0;
+        if (e.key === "ArrowUp") val++;
+        if (e.key === "ArrowDown") val--;
+        
+        if (val > max) val = min;
+        if (val < min) val = max;
+        
+        e.target.value = String(val).padStart(padLength, '0');
+        
+        // Trigger the input event to process smartJump if needed
+        e.target.dispatchEvent(new Event('input'));
+    }
+}
+
+
+
+
+
+
+
+
+
+
+// --- GLOBAL TRACKING FOR WAKE TIMER ---
+let wakeInterval = null; // Removed 'isFirstCloudFetch' entirely
+
+async function fetchFromCloud() {
+    const d = document.getElementById("onDay").value;
+    const m = document.getElementById("onMonth").value;
+    const y = document.getElementById("onYear").value;
+    
+    const hr = document.getElementById("onHour").value;
+    const min = document.getElementById("onMin").value;
+    const sec = document.getElementById("onSec").value || "00"; 
+
+    const latVal = document.getElementById("onlineLat").value;
+    const lonVal = document.getElementById("onlineLon").value;
+
+    if (!d || !m || !y || !hr || !min || !latVal || !lonVal) {
+        return;
+    }
+
+    // 🔥 NEW: Auto-fetch dynamic timezone using Open-Meteo's free API
+    let dynamicOffset = 330; // Default to IST as a safety fallback
+    try {
+        const tzResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latVal}&longitude=${lonVal}&timezone=auto`);
+        const tzData = await tzResponse.json();
+        
+        // Open-Meteo returns the offset in seconds. We divide by 60 to get minutes.
+        if (tzData && tzData.utc_offset_seconds !== undefined) {
+            dynamicOffset = tzData.utc_offset_seconds / 60; 
+        }
+    } catch (error) {
+        console.warn("Timezone fetch failed. Falling back to IST.", error);
+    }
+
+    const requestData = {
+        year: parseInt(y),
+        month: parseInt(m),
+        day: parseInt(d),
+        hour: parseInt(hr),
+        minute: parseInt(min),
+        second: parseInt(sec),
+        lat: parseFloat(latVal),
+        lon: parseFloat(lonVal),
+        timezone_offset: dynamicOffset,
+        horary_mode: false 
+    };
+
+    const btn = document.getElementById("fetchCloudBtn");
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = "Fetching Data... &#x23F3;";
+    btn.disabled = true;
+
+    const wakeContainer = document.getElementById("serverWakeContainer");
+    const wakeMessage = document.getElementById("wakeMessage");
+    const digitalClockPart = document.getElementById("digitalClockPart");
+    const progressBarPart = document.getElementById("progressBarPart");
+
+    wakeContainer.style.visibility = "visible";
+    wakeMessage.innerText = "> INITIATING_LINK...";
+    
+    let secondsElapsed = 0;
+    digitalClockPart.innerText = "00:00";
+    progressBarPart.innerText = "[" + ".".repeat(20) + "]";
+
+    if (wakeInterval) clearInterval(wakeInterval);
+
+    wakeInterval = setInterval(() => {
+        secondsElapsed++;
+        
+        let mins = Math.floor(secondsElapsed / 60);
+        let secs = secondsElapsed % 60;
+        digitalClockPart.innerText = String(mins).padStart(2, '0') + ":" + String(secs).padStart(2, '0');
+
+        if (secondsElapsed <= 40) {
+            let percent = (secondsElapsed / 40) * 100;
+            let pipesCount = Math.floor(percent / 5);
+            let emptyCount = 20 - pipesCount;
+            progressBarPart.innerText = "[" + "|".repeat(pipesCount) + ".".repeat(emptyCount) + "]";
+        } else {
+            let wavePos = (secondsElapsed % 20);
+            let waveArr = Array(20).fill('.');
+            waveArr[wavePos] = '|';
+            if(wavePos > 0) waveArr[wavePos-1] = '|';
+            if(wavePos < 19) waveArr[wavePos+1] = '|';
+            progressBarPart.innerText = "[" + waveArr.join('') + "]";
+        }
+
+        if (secondsElapsed === 2) wakeMessage.innerText = "> PINGING_SERVER...";
+        if (secondsElapsed === 5) wakeMessage.innerText = "> ESTABLISHING_CONNECTION...";
+        if (secondsElapsed === 15) wakeMessage.innerText = "> WAKING_COLD_INSTANCE...";
+        if (secondsElapsed === 30) wakeMessage.innerText = "> AWAITING_DATA_STREAM...";
+
+    }, 1000);
+
+    try {
+        const response = await fetch('https://donnie-astro-engine.onrender.com/calculate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestData)
+        });
+
+        const result = await response.json();
+
+        if (wakeInterval) clearInterval(wakeInterval);
+        wakeMessage.innerText = "> LINK_ESTABLISHED";
+        progressBarPart.innerText = "[" + "|".repeat(20) + "]";
+        
+        setTimeout(() => {
+            if (wakeContainer) wakeContainer.style.visibility = "hidden";
+        }, 2000);
+
+        if (result.status === "success") {
+
+            btn.innerHTML = "SUCCESS ✓";
+            btn.classList.add("success");
+
+            btn.style.background = "#39FF14";
+            btn.style.color = "#000";
+            btn.style.border = "2px solid #00ff00";
+
+            btn.style.boxShadow = `
+                0 0 5px #39FF14,
+                0 0 15px #39FF14,
+                0 0 30px #00ff00,
+                0 0 60px #39FF14
+            `;
+
+            btn.style.filter = "brightness(1.4) saturate(1.5)";
+
+            console.log(result);
+
+            // ==========================================
+            // NEW CODE: INJECT DATA AND RENDER UI
+            // ==========================================
+            
+            // 1. Assign fetched data to the global variable
+            window.__lastSwissData = result.data ? result.data : result;
+
+            // 🔥 CRITICAL FIX FOR ONLINE DATA:
+            // Online APIs omit the "meta" object containing the birthdate. 
+            // Vimshottari and Yogini Dasha rely on this to calculate elapsed years.
+            // We automatically construct and inject it here using the form values.
+            if (!window.__lastSwissData.meta) {
+                window.__lastSwissData.meta = {};
+            }
+            if (!window.__lastSwissData.meta.datetime_utc) {
+                const fY = document.getElementById("onYear").value;
+                const fM = document.getElementById("onMonth").value.padStart(2, '0');
+                const fD = document.getElementById("onDay").value.padStart(2, '0');
+                const fHr = document.getElementById("onHour").value.padStart(2, '0');
+                const fMin = document.getElementById("onMin").value.padStart(2, '0');
+                const fSec = document.getElementById("onSec").value.padStart(2, '0') || "00";
+                
+                window.__lastSwissData.meta.datetime_utc = `${fY}-${fM}-${fD}T${fHr}:${fMin}:${fSec}`;
+            }
+
+            // 2. Hard reset all overrides and states
+            window.__manualOrderOverride = null; 
+            window.__lastMixerSelection = null; 
+            window.__lastBukthiMixerSelection = null;
+            window.__fourFoldState = true; 
+            window.__mixerUntenantedState = false; 
+            window.__mixerStarlordOnlyState = false; 
+            window.__mixer2UntenantedState = false; 
+            window.__mixer2StarlordOnlyState = false; 
+            window.__mixerFourFoldState = true; 
+            window.__mixerAddDispositorState = false; 
+            window.__sixFoldExpanded = false; 
+            window.__nadiExpanded = false;    
+            VIM_CALIB_OFFSET_DAYS = 0; 
+            USE_KN_VIM = true; 
+            window.__dba3Dasha = null;
+            window.__dba3DashaP = true;
+            window.__dba3DashaS = true;
+            window.__dba3BukthiP = true;
+            window.__dba3BukthiS = true;
+            window.__dba3AntaraP = true;
+            window.__dba3AntaraS = true;
+            window.__dba3Expanded = false;
+
+            // 3. Reset Dropdowns
+            let sel1 = document.getElementById("kundaliPivot");
+            let sel2 = document.getElementById("kundaliPivotVim");
+            if(sel1) sel1.value = "Lagna";
+            if(sel2) sel2.value = "Lagna";
+
+            let expandLvl = document.getElementById("vimExpandLevel");
+            if(expandLvl) expandLvl.value = "3";
+
+            let calibStep = document.getElementById("vimCalibStep");
+            if(calibStep) calibStep.value = "60";
+
+            let divTemp = document.getElementById("dividerTemplate");
+            if(divTemp) divTemp.value = "manual";
+
+            ["dividerPos", "dividerSupport", "dividerNeg"].forEach(id => {
+                let el = document.getElementById(id);
+                if(el) el.value = "";
+            });
+
+            // 4. Reset Checkboxes
+            const defaultCheckedIds = [
+                "kpMode", "trueNode", "originalASC",
+                "useConjCusps", "ignoreRaKeLords", "hideVimDates", 
+                "useMonthNames", "knVimToggle", "birthStartToggle", 
+                "showAgeYears", "hideBhuktiAge", "splitSig2",
+                "rahuKetuSpecial"
+            ];
+            const defaultUncheckedIds = [
+                "sign2signMode", "vedicMode", 
+                "showCusps", "useConjPlanets", "useAspects",
+                "includeRaKeCuspal", "splitSig", 
+                "ignoreUntenanted", "hideAntaraRest", "equalMode"
+            ];
+
+            defaultCheckedIds.forEach(id => { let el = document.getElementById(id); if(el) el.checked = true; });
+            defaultUncheckedIds.forEach(id => { let el = document.getElementById(id); if(el) el.checked = false; });
+
+            // 5. Build order dropdown fresh from Moon
+            let selOrder = document.getElementById("tableSortOrder");
+            let dbaOrder = getDBAOrderFromMoon();
+            if(selOrder && dbaOrder.length) {
+                selOrder.innerHTML = "";
+                dbaOrder.forEach(p => {
+                    let opt = document.createElement("option"); opt.value = opt.text = p; selOrder.appendChild(opt);
+                });
+            }
+
+            // 6. Redraw everything with the new data
+            drawSIKundali();
+            buildSignificatorTable();
+            buildLordshipDecider();
+            buildSixFoldTables(); 
+            buildNadiTables();
+            buildVimshottari();
+            setVimToday();
+            
+            // ==========================================
+            // END OF NEW CODE
+            // ==========================================
+
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove("success");
+                btn.removeAttribute("style");
+                btn.disabled = false;
+            }, 3000);
+
+        } else {
+
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+
+    } catch (error) {
+
+        console.error("Fetch error:", error);
+
+        if (wakeInterval) clearInterval(wakeInterval);
+
+        wakeMessage.innerText = "> CONNECTION_FAILED";
+
+        const digitalClock = document.getElementById("digitalClockPart");
+
+        if(digitalClock) {
+            digitalClock.style.background = "#ff4444";
+            digitalClock.style.webkitTextFillColor = "#ff4444";
+            digitalClock.style.textShadow = "0 0 8px #ff4444";
+        }
+
+        setTimeout(() => {
+
+            if (wakeContainer) wakeContainer.style.visibility = "hidden";
+
+            if(digitalClock) {
+                digitalClock.style.background = "linear-gradient(180deg, #fff7cc 0%, #facc15 50%, #b8860b 100%)";
+                digitalClock.style.webkitTextFillColor = "transparent";
+                digitalClock.style.textShadow = "none";
+            }
+
+        }, 3000);
+
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+
+
+
+
+
+
+
+
+function clearFetchData(){
+  // Added lat and lon to the clear function so it wipes everything
+  [
+    "onName",
+    "onDay",
+    "onMonth",
+    "onYear",
+    "onHour",
+    "onMin",
+    "onSec",
+    "onlineLat",
+    "onlineLon"
+  ].forEach(id=>{
+    let el=document.getElementById(id);
+    if(el){
+      el.value="";
+    }
+  });
+}
+
+function saveCloudProfile(){
+  // Gathers current input values and downloads them as a JSON file
+  let profile = {
+    name: document.getElementById('onName').value,
+    day: document.getElementById('onDay').value,
+    month: document.getElementById('onMonth').value,
+    year: document.getElementById('onYear').value,
+    hour: document.getElementById('onHour').value,
+    minute: document.getElementById('onMin').value,
+    second: document.getElementById('onSec').value,
+    lat: document.getElementById('onlineLat').value,
+    lon: document.getElementById('onlineLon').value
+  };
+  
+  let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(profile, null, 2));
+  let downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", (profile.name || "profile") + ".json");
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+}
+
+function loadCloudProfile(event){
+
+  let file = event.target.files[0];
+  if (!file) return;
+
+  let reader = new FileReader();
+
+  reader.onload = function(e){
+
+    try{
+
+      let data = JSON.parse(e.target.result);
+
+      // NAME
+      if(data.name){
+        document.getElementById('onName').value = data.name;
+      }
+
+      // DATE BLOCK
+      if(data.date){
+        if(data.date.d){
+          document.getElementById('onDay').value = data.date.d;
+        }
+
+        if(data.date.m){
+          document.getElementById('onMonth').value = data.date.m;
+        }
+
+        if(data.date.y){
+          document.getElementById('onYear').value = data.date.y;
+        }
+      }
+
+      // TIME BLOCK
+      if(data.time){
+
+        if(data.time.h){
+          document.getElementById('onHour').value = data.time.h;
+        }
+
+        if(data.time.min){
+          document.getElementById('onMin').value = data.time.min;
+        }
+
+        if(data.time.sec){
+          document.getElementById('onSec').value = data.time.sec;
+        }
+      }
+
+      // COORDS BLOCK
+      if(data.coords){
+
+        if(data.coords.lat){
+          document.getElementById('onlineLat').value = data.coords.lat;
+        }
+
+        if(data.coords.lon){
+          document.getElementById('onlineLon').value = data.coords.lon;
+        }
+      }
+
+      document.getElementById('loadProfileInput').value = "";
+
+      console.log("Cloud profile loaded successfully");
+      
+      // 🔥 NEW: Auto-trigger the cloud fetch immediately after loading!
+      setTimeout(fetchFromCloud, 300);
+
+    }catch(error){
+
+      console.error("Invalid JSON profile format", error);
+      alert("Invalid JSON profile format");
+
+    }
+
+  };
+
+  reader.readAsText(file);
+}
+
+
+
+
 
 
 
@@ -1641,18 +2498,19 @@ function loadSwissJSON(){
 
       // 3. HARD RESET ALL CHECKBOXES TO THEIR ORIGINAL HTML STATE
       const defaultCheckedIds = [
-		"kpMode", "trueNode", "originalASC",
+        "kpMode", "trueNode", "originalASC",
         "useConjCusps", "ignoreRaKeLords", "hideVimDates", 
         "useMonthNames", "knVimToggle", "birthStartToggle", 
-        "showAgeYears", "hideBhuktiAge" 
+        "showAgeYears", "hideBhuktiAge", "splitSig2",
+        "rahuKetuSpecial" // ✅ FORCE DEFAULT ON
       ];
       
       const defaultUncheckedIds = [
-		  "sign2signMode", "vedicMode", 
-		  "showCusps", "useConjPlanets", "useAspects",
-		  "includeRaKeCuspal", "splitSig", "splitSig2", 
-		  "ignoreUntenanted", "hideAntaraRest", "equalMode"
-		];
+        "sign2signMode", "vedicMode", 
+        "showCusps", "useConjPlanets", "useAspects",
+        "includeRaKeCuspal", "splitSig", 
+        "ignoreUntenanted", "hideAntaraRest", "equalMode"
+      ];
 
       defaultCheckedIds.forEach(id => {
         let el = document.getElementById(id);
@@ -1813,12 +2671,14 @@ document.getElementById("trueNode")?.addEventListener("change", () => {
 
 
 
-["useConjPlanets","useAspects","useConjCusps","ignoreRaKeLords","includeRaKeCuspal","ignoreUntenanted"].forEach(id=>{
-  document.getElementById(id).addEventListener("change",()=>{
+["useConjPlanets","useAspects","useConjCusps","ignoreRaKeLords","includeRaKeCuspal","ignoreUntenanted","rahuKetuSpecial"].forEach(id=>{
+  document.getElementById(id)?.addEventListener("change",()=>{
     buildSignificatorTable();
-    buildSixFoldTables(); // <-- Added
-    buildNadiTables();    // <-- Added
+    buildSixFoldTables(); 
+    buildNadiTables();    
     buildVimshottari();
+    buildDashaBukthiMixer();         // <-- ADDED THIS TO FIX 2-LEVEL MIXER
+    buildDashaBukthiAntaraMixer();   // <-- ADDED THIS TO FIX 3-LEVEL MIXER
   });
 });
 
@@ -1866,6 +2726,7 @@ document.getElementById("splitSig2").addEventListener("change",()=>{
 
 
 function buildSignificatorTable(){
+	window.__SIG_CACHE = {};
   let container = document.getElementById("sigContainer");
   container.innerHTML = "";
  
@@ -1915,21 +2776,81 @@ sigPlanets.forEach(p => {
 	  }
 	}
 
+	
+	
+	
+	let isRaKeSpecial = document.getElementById("rahuKetuSpecial")?.checked === false;
+
 	let p_house = window.__lastSwissData ? getPlanetHouse(p) : "";
 	let p_lords = window.__lastSwissData ? getLordsOf(p) : "";
-	let s_house = starLord ? getPlanetHouse(starLord) : "";
-	let s_lords = starLord ? getLordsOf(starLord) : "";
-
-	
 	let conjPlanets = window.__lastSwissData ? getConjunctPlanets(p) : "-";
 	let aspects = window.__lastSwissData ? getAspectHouses(p) : "-";
 	let conjCusps = window.__lastSwissData ? getCuspalConjunct(p) : "-";
+	let aspectedByP = window.__lastSwissData ? getAspectedBy(p) : "-";
+	
+	
+	
 
+	
+	
+	
+	if (p === "Rahu" || p === "Ketu") {
+
+	  // ✅ ON → APPLY SPECIAL RULE
+		if (isRaKeSpecial === true) {
+		p_lords = "-";
+		conjPlanets = "-";
+		aspects = "-";
+		conjCusps = "-";
+		aspectedByP = "-";
+	  }
+
+	  // ❌ OFF → NORMAL LOGIC
+		if (isRaKeSpecial === false) {
+		let sign = getPlanetSign(p);
+		let dispositor = SIGN_LORDS[sign];
+
+		if (dispositor) {
+		  let dHouse = getPlanetHouse(dispositor);
+		  let dLords = getLordsOf(dispositor);
+
+		  let nums = [];
+		  if (dHouse) nums.push(parseInt(dHouse));
+		  if (dLords && dLords !== "-") {
+			dLords.split(",").forEach(x => nums.push(parseInt(x)));
+		  }
+
+		  p_lords = [...new Set(nums)].sort((a,b) => a-b).join(",");
+		} else {
+		  p_lords = "-";
+		}
+	  }
+	}
+
+
+
+
+
+
+
+
+	let s_house = starLord ? getPlanetHouse(starLord) : "";
+	let s_lords = starLord ? getLordsOf(starLord) : "";
 	let s_conjPlanets = starLord ? getConjunctPlanets(starLord) : "-";
 	let s_aspects = starLord ? getAspectHouses(starLord) : "-";
 	let s_conjCusps = starLord ? getCuspalConjunct(starLord) : "-";
+	let aspectedByS = "-"; // ALWAYS blank for Star Lord
 
 	
+	if (starLord === "Rahu" || starLord === "Ketu") {
+		// STRICT RULE: Star Lord Ra/Ke → ONLY show its placement house
+		s_lords = "-";   // ❌ No lord expansion
+		s_conjPlanets = "-";
+		s_aspects = "-";
+		s_conjCusps = "-";
+		aspectedByS = "-";
+	}
+		
 	
 	
 	
@@ -1961,7 +2882,7 @@ sigPlanets.forEach(p => {
           <th style="border:1px solid #10b981;padding:6px">Conjunct Planets</th>
 		<th style="border:1px solid #10b981;padding:6px">Aspects</th>
 		<th style="border:1px solid #10b981;padding:6px">Conjunct Cuspal</th>
-
+		<th style="border:1px solid #10b981;padding:6px">Aspected By</th>
 
         </tr>
         <tr>
@@ -1972,6 +2893,7 @@ sigPlanets.forEach(p => {
           <td style="border:1px solid #10b981;padding:6px">${getConjunctPlanets(p)}</td>
           <td style="border:1px solid #10b981;padding:6px">${getAspectHouses(p)}</td>
 			<td style="border:1px solid #10b981;padding:6px">${getCuspalConjunct(p)}</td>
+			<td style="border:1px solid #10b981;padding:6px">${aspectedByP}</td>
         </tr>
         <tr style="color:#d4af37">
           <td style="border:1px solid #10b981;padding:6px">Star Lord</td>
@@ -1981,6 +2903,7 @@ sigPlanets.forEach(p => {
           <td style="border:1px solid #10b981;padding:6px">${starLord ? getConjunctPlanets(starLord) : ""}</td>
           <td style="border:1px solid #10b981;padding:6px">${starLord ? getAspectHouses(starLord) : ""}</td>
 		<td style="border:1px solid #10b981;padding:6px">${starLord ? getCuspalConjunct(starLord) : ""}</td>
+		<td style="border:1px solid #10b981;padding:6px">${starLord ? aspectedByS : ""}</td>
         </tr>
       </table>
       <div style="margin-top:8px;font-weight:900;color:var(--accent);font-family:Consolas, monospace, 'Noto Sans Kannada';">
@@ -2047,6 +2970,15 @@ sigPlanets.forEach(p => {
 		  }
 		}
 
+		[aspectedByP, aspectedByS].forEach(txt => {
+		  if(txt && txt !== "-"){
+		    let planets = txt.match(/\((.*?)\)/g) || [];
+		    planets.forEach(x => {
+		      x.replace(/[()]/g,"").split(",").forEach(n => values.push(n));
+		    });
+		  }
+		});
+
 		  let nums=values
 			.map(x=>parseInt(x,10))
 			.filter(x=>!isNaN(x));
@@ -2063,9 +2995,44 @@ sigPlanets.forEach(p => {
 		
 		
       </div>`;
-    container.appendChild(box);
-  });
-}
+	  
+	  
+
+		// 🚨 FORCE override BEFORE caching
+		let cache_house = p_house;
+		let cache_lords = p_lords;
+		let cache_starHouse = s_house;
+		let cache_starLords = s_lords;
+
+		if ((p === "Rahu" || p === "Ketu") && isRaKeSpecial) {
+		  cache_lords = "-";
+		  cache_starLords = "-";
+		}
+
+		window.__SIG_CACHE[p] = {
+		  house: cache_house,
+		  lords: cache_lords,
+		  starHouse: cache_starHouse,
+		  starLords: cache_starLords,
+		  final: (()=>{
+
+			let values=[cache_house, cache_lords, cache_starHouse, cache_starLords]
+			  .filter(x=>x && x!=="")
+			  .join(",")
+			  .split(",");
+
+			let nums=values
+			  .map(x=>parseInt(x,10))
+			  .filter(x=>!isNaN(x));
+
+			return [...new Set(nums)].sort((a,b)=>a-b);
+		  })()
+		};
+			  
+			  
+			container.appendChild(box);
+		  });
+		}
 
 
 
@@ -3495,60 +4462,129 @@ function buildDashaBukthiMixer() {
     </tr>
   `;
 
-  // --- NEW ENGINE: Standalone Mixer Generator ---
-  // Added isAddDispositor parameter to control Rahu/Ketu injection
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// --- NEW ENGINE: Standalone Mixer Generator ---
   function getMixerMixedNums(p, isUntenanted, isStarlordOnly, isFourFold, isDashaCol = false, isAddDispositor = true) {
       let subLord = getSubLord(p);
       let starLord = getStarLord(p);
+      let isRaKeSpecial = document.getElementById("rahuKetuSpecial")?.checked === false;
 
-      // 1. Identify if the current planet is actually untenanted ($)
       let isPlanetUntenanted = getUntenantedPlanets().includes(p);
-
-      // 2. STARLORD VISIBILITY RULE
-      // If "Untenanted" toggle is ON and the planet is actually untenanted, hide the StarLord
-      if (isUntenanted && isPlanetUntenanted) {
-          starLord = "";
-      }
-
-      // 3. PLANET VISIBILITY RULE
-      // If "STARLORD ONLY" toggle is ON, but ONLY if the planet is NOT untenanted, hide the Planet
+      if (isUntenanted && isPlanetUntenanted) starLord = "";
+      
       let showPlanet = true;
-      if (isStarlordOnly && !isPlanetUntenanted) {
-          showPlanet = false;
+      if (isStarlordOnly && !isPlanetUntenanted) showPlanet = false;
+
+      function getLordsOrDisp(ent, applyRaKeStrict = false) {
+          if (ent === "Rahu" || ent === "Ketu") {
+              if (isRaKeSpecial || applyRaKeStrict) return "-";
+              let sign = getPlanetSign(ent);
+              let disp = SIGN_LORDS[sign];
+              if (disp) {
+                  let nums = [];
+                  let dH = getPlanetHouse(disp);
+                  if (dH) nums.push(parseInt(dH));
+                  let dL = getLordsOf(disp);
+                  if (dL && dL !== "-") dL.split(",").forEach(x => nums.push(parseInt(x)));
+                  return nums.join(",");
+              }
+              return "-";
+          }
+          return getLordsOf(ent);
       }
 
-      // Apply visibility to Planet variables
-      let pltInHouse = showPlanet ? getPlanetHouse(p) : "";
-      let signLordOfHouses = showPlanet ? ((p === "Rahu" || p === "Ketu") ? "" : getLordsOf(p)) : "";
+      let mixedArray = [];
 
-      // --- INJECT DISPOSITOR FOR RAHU/KETU EXCLUSIVELY IN DASHA COLUMN (If Checkbox is ON) ---
-      let dispPlaced = "";
-      let dispLords = "";
-      if (isAddDispositor && isDashaCol && showPlanet && (p === "Rahu" || p === "Ketu")) {
-          let sign = getPlanetSign(p);
-          let dispositor = SIGN_LORDS[sign];
-          if (dispositor) {
-              dispPlaced = getPlanetHouse(dispositor);
-              dispLords = getLordsOf(dispositor);
+      // Planet Logic
+      if (showPlanet) {
+          let h = getPlanetHouse(p);
+          if (h) mixedArray.push(parseInt(h));
+          let l = getLordsOrDisp(p, false);
+          if (l && l !== "-") mixedArray.push(l);
+
+          let skipRaKeP = isRaKeSpecial && (p === "Rahu" || p === "Ketu");
+
+          if(document.getElementById("useConjPlanets")?.checked && !skipRaKeP) {
+              let cp = getConjunctPlanets(p);
+              if (cp && cp !== "-") {
+                  let extracted = cp.match(/\((.*?)\)/g) || [];
+                  extracted.forEach(x => mixedArray.push(x.replace(/[()]/g, "")));
+              }
+          }
+
+          if(document.getElementById("useAspects")?.checked && !skipRaKeP) {
+              let asp = getAspectHouses(p);
+              if (asp && asp !== "-") mixedArray.push(asp);
+          }
+
+          if(document.getElementById("useConjCusps")?.checked) {
+              let allowRaKe = document.getElementById("includeRaKeCuspal")?.checked;
+              if (!skipRaKeP && (allowRaKe || (p !== "Rahu" && p !== "Ketu"))) {
+                  let c = getCuspalConjunct(p);
+                  if (c && c !== "-") mixedArray.push(c);
+              }
+          }
+
+          if (!skipRaKeP) {
+              let aspBy = getAspectedBy(p);
+              if (aspBy && aspBy !== "-") {
+                  let extracted = aspBy.match(/\((.*?)\)/g) || [];
+                  extracted.forEach(x => mixedArray.push(x.replace(/[()]/g, "")));
+              }
           }
       }
 
-      let naklInHouse = starLord ? getPlanetHouse(starLord) : "";
-      let naklSgl = (starLord === "Rahu" || starLord === "Ketu" || !starLord) ? "" : getLordsOf(starLord);
+      // Starlord Logic
+      if (starLord) {
+          let h = getPlanetHouse(starLord);
+          if (h) mixedArray.push(parseInt(h));
+          let l = getLordsOrDisp(starLord, true); 
+          if (l && l !== "-") mixedArray.push(l);
 
-      // Kill sublord columns if 4 Fold OR Starlord Only is checked
-      let sublInHouse = (isFourFold || isStarlordOnly) ? "" : (subLord ? getPlanetHouse(subLord) : "");
-      let sublSgl = (isFourFold || isStarlordOnly) ? "" : ((subLord === "Rahu" || subLord === "Ketu" || !subLord) ? "" : getLordsOf(subLord));
+          let skipRaKeS = isRaKeSpecial && (starLord === "Rahu" || starLord === "Ketu");
 
-      // Push the new dispositor variables into the calculation array
-      let mixedArray = [sublInHouse, naklInHouse, pltInHouse, sublSgl, naklSgl, signLordOfHouses, dispPlaced, dispLords];
-
-      if(document.getElementById("useConjCusps")?.checked) {
-          let allowRaKe = document.getElementById("includeRaKeCuspal")?.checked;
-          if(!isStarlordOnly && (allowRaKe || (p !== "Rahu" && p !== "Ketu"))) {
-              let cusps = getCuspalConjunct(p);
-              if(cusps && cusps !== "-") mixedArray.push(cusps);
+          if(document.getElementById("useConjPlanets")?.checked && !skipRaKeS) {
+              let cp = getConjunctPlanets(starLord);
+              if (cp && cp !== "-") {
+                  let extracted = cp.match(/\((.*?)\)/g) || [];
+                  extracted.forEach(x => mixedArray.push(x.replace(/[()]/g, "")));
+              }
           }
+
+          if(document.getElementById("useAspects")?.checked && !skipRaKeS) {
+              let asp = getAspectHouses(starLord);
+              if (asp && asp !== "-") mixedArray.push(asp);
+          }
+
+          if(document.getElementById("useConjCusps")?.checked) {
+              let allowRaKe = document.getElementById("includeRaKeCuspal")?.checked;
+              if (!skipRaKeS && (allowRaKe || (starLord !== "Rahu" && starLord !== "Ketu"))) {
+                  let c = getCuspalConjunct(starLord);
+                  if (c && c !== "-") mixedArray.push(c);
+              }
+          }
+      }
+
+      // Sublord Logic
+      if (!isFourFold && !isStarlordOnly && subLord) {
+          let h = getPlanetHouse(subLord);
+          if (h) mixedArray.push(parseInt(h));
+          let l = getLordsOrDisp(subLord, true);
+          if (l && l !== "-") mixedArray.push(l);
       }
 
       let numsList = [];
@@ -3560,9 +4596,9 @@ function buildDashaBukthiMixer() {
           });
       });
       
-      // Filter unique & sort
       return [...new Set(numsList)].sort((a,b) => a - b);
   }
+
 
 
 
@@ -3886,11 +4922,52 @@ function getPlanetSignificatorsSplit(planet, forceUntenanted = false, forceStarl
 
   let starLord = shouldIgnoreStarLord(planet, forceUntenanted) ? "" : getStarLord(planet);
 
+  
+  
+ let isRaKeSpecial = document.getElementById("rahuKetuSpecial")?.checked === false;
   let p_house = forceStarlordOnly ? "" : getPlanetHouse(planet);
   let p_lords = forceStarlordOnly ? "" : getLordsOf(planet);
 
+  if (!forceStarlordOnly && (planet === "Rahu" || planet === "Ketu")) {
+    if (isRaKeSpecial) {
+      p_lords = "-";
+    } else {
+      let sign = getPlanetSign(planet);
+      let disp = SIGN_LORDS[sign];
+      if (disp) {
+        let dHouse = getPlanetHouse(disp);
+        let dLords = getLordsOf(disp);
+        let nums = [];
+        if(dHouse) nums.push(parseInt(dHouse));
+        if(dLords && dLords !== "-") dLords.split(",").forEach(x => nums.push(parseInt(x)));
+        p_lords = [...new Set(nums)].sort((a,b) => a-b).join(",");
+      } else {
+        p_lords = "-";
+      }
+    }
+  }
+
   let s_house = starLord ? getPlanetHouse(starLord) : "";
   let s_lords = starLord ? getLordsOf(starLord) : "";
+
+  if (starLord === "Rahu" || starLord === "Ketu") {
+    let sign = getPlanetSign(starLord);
+    let disp = SIGN_LORDS[sign];
+    if (disp) {
+      let dHouse = getPlanetHouse(disp);
+      let dLords = getLordsOf(disp);
+      let nums = [];
+      if(dHouse) nums.push(parseInt(dHouse));
+      if(dLords && dLords !== "-") dLords.split(",").forEach(x => nums.push(parseInt(x)));
+      s_lords = [...new Set(nums)].sort((a,b) => a-b).join(",");
+    } else {
+      s_lords = "-";
+    }
+  }
+  
+  
+  
+  
 
   let blocks=[];
 
@@ -3965,9 +5042,11 @@ function getPlanetSignificatorsSplit(planet, forceUntenanted = false, forceStarl
     let allNums=[];
 
     [forceStarlordOnly ? null : planet, starLord].forEach(ent=>{
-      if(!ent) return;
+        if(!ent) return;
+        if (isRaKeSpecial && ent === planet && (ent === "Rahu" || ent === "Ketu")) return;
 
-      let txt=getConjunctPlanets(ent);
+        let txt=getConjunctPlanets(ent);
+		
       let planets = txt.match(/\((.*?)\)/g) || [];
 
       planets.forEach(x=>{
@@ -3998,9 +5077,12 @@ function getPlanetSignificatorsSplit(planet, forceUntenanted = false, forceStarl
     let allNums=[];
 
     [forceStarlordOnly ? null : planet, starLord].forEach(ent=>{
-      if(!ent) return;
+        if(!ent) return;
+        if (isRaKeSpecial && (ent === "Rahu" || ent === "Ketu")) return;
 
-      let asp=getAspectHouses(ent);
+        let asp=getAspectHouses(ent);
+		
+		
       if(asp && asp!=="-"){
         asp.split(",").forEach(n=>allNums.push(parseInt(n)));
       }
@@ -4035,9 +5117,10 @@ if(document.getElementById("useConjCusps")?.checked){
   const allowRaKe = document.getElementById("includeRaKeCuspal")?.checked;
 
   [forceStarlordOnly ? null : planet, starLord].forEach(ent=>{
-    if(!ent) return;
+        if(!ent) return;
+        if (isRaKeSpecial && (ent === "Rahu" || ent === "Ketu")) return;
 
-    if(!allowRaKe && (ent==="Rahu" || ent==="Ketu")) return;
+        if(!allowRaKe && (ent==="Rahu" || ent==="Ketu")) return;
 
     let cus=getCuspalConjunct(ent);
     if(cus && cus!=="-"){
@@ -4053,9 +5136,34 @@ if(document.getElementById("useConjCusps")?.checked){
   }
 }
 
-  
-  
+  let allNumsAsp = [];
+  let entsToAspect = [forceStarlordOnly ? null : planet]; // Only check planet
 
+  entsToAspect.forEach(ent=>{
+    if(!ent) return;
+    if (isRaKeSpecial && (ent === "Rahu" || ent === "Ketu")) return;
+
+    let aspBy = getAspectedBy(ent);
+	
+	
+    if(aspBy && aspBy !== "-"){
+	
+	
+	
+      let planets = aspBy.match(/\((.*?)\)/g) || [];
+      planets.forEach(x => {
+        x.replace(/[()]/g,"").split(",").forEach(n => allNumsAsp.push(parseInt(n)));
+      });
+    }
+  });
+
+  allNumsAsp = allNumsAsp.filter(n=>!isNaN(n));
+  allNumsAsp = [...new Set(allNumsAsp)].sort((a,b)=>a-b);
+
+  if(allNumsAsp.length){
+    blocks.push(`${allNumsAsp.join(",")}`);
+  }
+  
   return blocks.join(" + ") || "-";
 }
 
@@ -4066,26 +5174,47 @@ function getPlanetSignificatorsSplit2(planet, forceUntenanted = false, forceStar
 
   let starLord = shouldIgnoreStarLord(planet, forceUntenanted) ? "" : getStarLord(planet);
 
-  function buildBlock(ent){
-    if(!ent) return "";
+  function buildBlock(ent, isStarlord = false){
+      if(!ent) return "";
 
     let house = getPlanetHouse(ent);
     if(!house) return "";
 
-    if(ent==="Rahu" || ent==="Ketu"){
-	  return `${house}`;
-	}
+    let isRaKeSpecial = document.getElementById("rahuKetuSpecial")?.checked === false;
+
+    if(ent === "Rahu" || ent === "Ketu"){
+      if (isStarlord || isRaKeSpecial) {
+        return `${house}`;
+      }
+    }
 
 	let nums = [parseInt(house)];
-
     let lords = getLordsOf(ent);
+    
+    if(ent === "Rahu" || ent === "Ketu"){
+      let sign = getPlanetSign(ent);
+      let disp = SIGN_LORDS[sign];
+      if (disp) {
+        let dHouse = getPlanetHouse(disp);
+        let dLords = getLordsOf(disp);
+        let numsArr = [];
+        if(dHouse) numsArr.push(parseInt(dHouse));
+        if(dLords && dLords !== "-") dLords.split(",").forEach(x => numsArr.push(parseInt(x)));
+        lords = [...new Set(numsArr)].sort((a,b) => a-b).join(",");
+      } else {
+        lords = "-";
+      }
+    }
+
     if(lords && lords !== "-"){
       lords.split(",").forEach(n=>{
         nums.push(parseInt(n));
       });
     }
 
-    if(document.getElementById("useConjPlanets")?.checked){
+    let isRaKeSkipped = isRaKeSpecial && (ent === "Rahu" || ent === "Ketu");
+
+    if(document.getElementById("useConjPlanets")?.checked && !isRaKeSkipped){
       let txt = getConjunctPlanets(ent);
       let planets = txt.match(/\((.*?)\)/g) || [];
       planets.forEach(x=>{
@@ -4095,41 +5224,65 @@ function getPlanetSignificatorsSplit2(planet, forceUntenanted = false, forceStar
       });
     }
 
-    if(document.getElementById("useAspects")?.checked){
+    if(document.getElementById("useAspects")?.checked && !isRaKeSkipped){
       let asp = getAspectHouses(ent);
       if(asp && asp !== "-"){
         asp.split(",").forEach(n=>nums.push(parseInt(n)));
       }
     }
 
-    if(document.getElementById("useConjCusps")?.checked){
-
-  const allowRaKe = document.getElementById("includeRaKeCuspal")?.checked;
-
-  if(allowRaKe || (ent!=="Rahu" && ent!=="Ketu")){
-    let cus = getCuspalConjunct(ent);
-    if(cus && cus !== "-"){
-      cus.split(",").forEach(n=>nums.push(parseInt(n)));
+    if(document.getElementById("useConjCusps")?.checked && !isRaKeSkipped){
+      const allowRaKe = document.getElementById("includeRaKeCuspal")?.checked;
+      if(allowRaKe || (ent!=="Rahu" && ent!=="Ketu")){
+        let cus = getCuspalConjunct(ent);
+        if(cus && cus !== "-"){
+          cus.split(",").forEach(n=>nums.push(parseInt(n)));
+        }
+      }
     }
-  }
-}
-
 
     nums = nums.filter(n=>!isNaN(n));
-    nums = [...new Set(nums)].sort((a,b)=>a-b);
+    
+    // 1. Remove random duplicates (from cusps/aspects leaking in)
+    nums = [...new Set(nums)];
+    
+    // 2. Temporarily remove the placed house so we can perfectly control it
+    let hInt = parseInt(house);
+    nums = nums.filter(n => n !== hInt);
+    
+    if (!isStarlord && !isRaKeSkipped) {
+      let aspBy = getAspectedBy(ent);
+      if(aspBy && aspBy !== "-"){
+        let extracted = aspBy.match(/\((.*?)\)/g) || [];
+        extracted.forEach(x => {
+          x.replace(/[()]/g,"").split(",").forEach(n => nums.push(parseInt(n)));
+        });
+      }
+    }
 
-   if(nums.length===1){
-  return `${nums[0]}`;
-}
-return `${house}-${nums.join(",")}`;
+    // 3. Add it back ONCE if the planet naturally owns it
+    let lordsStr = lords;
+    if (lordsStr && lordsStr.split(",").includes(String(hInt))) {
+        nums.push(hInt);
+    }
+    
+    // 4. Add it back ONCE as the required placed house for Split View 2
+    nums.push(hInt);
+
+    nums.sort((a,b)=>a-b);
+
+    if(nums.length===0){
+      return `${house}`;
+    }
+    return `${house}-${nums.join(",")}`;
 
 	
 	
 	
   }
 
-  let planetBlock = forceStarlordOnly ? "" : buildBlock(planet);
-  let starBlock = buildBlock(starLord);
+  let planetBlock = forceStarlordOnly ? "" : buildBlock(planet, false);
+  let starBlock = buildBlock(starLord, true);
 
   if(planetBlock && starBlock){
     return `${planetBlock} + ${starBlock}`;
@@ -4165,11 +5318,33 @@ function getPlanetSignificators(planet, forceUntenanted = false, forceStarlordOn
 
   let starLord = shouldIgnoreStarLord(planet, forceUntenanted) ? "" : getStarLord(planet);
 
+  // FIX 1: Corrected to === true so the special rule actually activates
+  let isRaKeSpecial = document.getElementById("rahuKetuSpecial")?.checked === false;
   let p_house = forceStarlordOnly ? "" : getPlanetHouse(planet);
   let p_lords = forceStarlordOnly ? "" : getLordsOf(planet);
+  
+  if (!forceStarlordOnly && (planet === "Rahu" || planet === "Ketu")) {
+    if (isRaKeSpecial) {
+      p_lords = "-";
+    } else {
+      let sign = getPlanetSign(planet);
+      let disp = SIGN_LORDS[sign];
+      if (disp) {
+        let dHouse = getPlanetHouse(disp);
+        let dLords = getLordsOf(disp);
+        let nums = [];
+        if(dHouse) nums.push(parseInt(dHouse));
+        if(dLords && dLords !== "-") dLords.split(",").forEach(x => nums.push(parseInt(x)));
+        p_lords = [...new Set(nums)].sort((a,b) => a-b).join(",");
+      } else {
+        p_lords = "-";
+      }
+    }
+  }
+
   let s_house = starLord ? getPlanetHouse(starLord) : "";
   let s_lords = starLord ? getLordsOf(starLord) : "";
-
+  
   let conjPlanets = forceStarlordOnly ? "-" : getConjunctPlanets(planet);
   let aspects = forceStarlordOnly ? "-" : getAspectHouses(planet);
   let conjCusps = forceStarlordOnly ? "-" : getCuspalConjunct(planet);
@@ -4177,6 +5352,23 @@ function getPlanetSignificators(planet, forceUntenanted = false, forceStarlordOn
   let s_conjPlanets = starLord ? getConjunctPlanets(starLord) : "-";
   let s_aspects = starLord ? getAspectHouses(starLord) : "-";
   let s_conjCusps = starLord ? getCuspalConjunct(starLord) : "-";
+
+  // FIX 2: Apply the strict rule to Star Lord (Mirroring the main table's strict behavior)
+  if (starLord === "Rahu" || starLord === "Ketu") {
+    s_lords = "-";
+    s_conjPlanets = "-";
+    s_aspects = "-";
+    s_conjCusps = "-";
+  }
+
+  // Planet Level Special Rule
+  if (isRaKeSpecial) {
+     if (planet === "Rahu" || planet === "Ketu") {
+        conjPlanets = "-";
+        aspects = "-";
+        conjCusps = "-";
+     }
+  }
 
   let values=[p_house, p_lords, s_house, s_lords]
     .filter(x=>x && x!=="")
@@ -4200,20 +5392,35 @@ function getPlanetSignificators(planet, forceUntenanted = false, forceStarlordOn
     });
   }
 
+  /* Cuspal conjunction */
+  if(document.getElementById("useConjCusps")?.checked){
 
-/* Cuspal conjunction */
-if(document.getElementById("useConjCusps")?.checked){
+    const allowRaKe = document.getElementById("includeRaKeCuspal")?.checked;
 
-  const allowRaKe = document.getElementById("includeRaKeCuspal")?.checked;
+    if(allowRaKe || (planet!=="Rahu" && planet!=="Ketu")){
+      conjCusps.split(",").forEach(n=>values.push(n));
+    }
 
-  if(allowRaKe || (planet!=="Rahu" && planet!=="Ketu")){
-    conjCusps.split(",").forEach(n=>values.push(n));
+    if(allowRaKe || (starLord!=="Rahu" && starLord!=="Ketu")){
+      s_conjCusps.split(",").forEach(n=>values.push(n));
+    }
   }
 
-  if(allowRaKe || (starLord!=="Rahu" && starLord!=="Ketu")){
-    s_conjCusps.split(",").forEach(n=>values.push(n));
+  let aspectedByP = forceStarlordOnly ? "-" : getAspectedBy(planet);
+  let aspectedByS = "-"; // ALWAYS blank for Star Lord
+
+  if (isRaKeSpecial && (planet === "Rahu" || planet === "Ketu")) {
+     aspectedByP = "-";
   }
-}
+
+  [aspectedByP].forEach(txt => {
+    if(txt && txt !== "-"){
+      let planets = txt.match(/\((.*?)\)/g) || [];
+      planets.forEach(x => {
+        x.replace(/[()]/g,"").split(",").forEach(n => values.push(n));
+      });
+    }
+  });
 
 
   let nums=values
@@ -4224,8 +5431,6 @@ if(document.getElementById("useConjCusps")?.checked){
 
   return unique.length?unique.join(","):"-";
 }
-
-
 
 
 
@@ -5463,153 +6668,226 @@ window.__dba3BukthiS = true;
 window.__dba3AntaraP = true;
 window.__dba3AntaraS = true;
 
-// NEW: Global state for the View modes (Split on by default)
+
+
+
+
+// NEW: Global state for the View modes
 if (typeof window.__dba3NormalView === 'undefined') window.__dba3NormalView = false;
-if (typeof window.__dba3SplitView === 'undefined') window.__dba3SplitView = true;
-
-
-
-
-
-
-
-
-
-
+if (typeof window.__dba3SplitView === 'undefined') window.__dba3SplitView = false; // Split View 1 Default OFF
+if (typeof window.__dba3SplitView2 === 'undefined') window.__dba3SplitView2 = true; // Split View 2 Default ON
 
 // NEW: Helper function to generate the "House-Lords" format
-// NEW: Helper function to generate the "House-Lords" format
-function buildSplitBlock(ent) {
+function buildSplitBlock(ent, isSplitView2, isStarlord = false) {
     if(!ent) return "";
     let h = getPlanetHouse(ent);
-    let nums = [];
+    let isRaKeSpecial = document.getElementById("rahuKetuSpecial")?.checked === false;
     
-    let l = (ent === "Rahu" || ent === "Ketu") ? "" : getLordsOf(ent);
-    if(l && l !== "-") {
-        l.split(",").forEach(x => nums.push(parseInt(x)));
+    // Strict rule: Starlords or Special Rule ON means NO lords
+    if (ent === "Rahu" || ent === "Ketu") {
+        if (isStarlord || isRaKeSpecial) {
+            return `${h}`;
+        }
     }
 
-    // --- NEW: INJECT DISPOSITOR (SPLIT VIEW) ---
-    if (window.__dba3AddDispositor && (ent === "Rahu" || ent === "Ketu")) {
+    let nums = [];
+    let ownedHouses = []; 
+    
+    // Dispositor injection for Ra/Ke when Special is OFF
+    if (ent === "Rahu" || ent === "Ketu") {
         let sign = getPlanetSign(ent);
         let disp = SIGN_LORDS[sign];
         if (disp) {
             let dHouse = getPlanetHouse(disp);
             if (dHouse) nums.push(parseInt(dHouse));
             let dLords = getLordsOf(disp);
-            if (dLords && dLords !== "-") {
-                dLords.split(",").forEach(x => nums.push(parseInt(x)));
-            }
+            if (dLords && dLords !== "-") dLords.split(",").forEach(x => { nums.push(parseInt(x)); ownedHouses.push(parseInt(x)); });
         }
+    } else {
+        let l = getLordsOf(ent);
+        if(l && l !== "-") l.split(",").forEach(x => { nums.push(parseInt(x)); ownedHouses.push(parseInt(x)); });
     }
 
-    // Cuspal conjunction support
+    let skipRaKeEnt = isRaKeSpecial && (ent === "Rahu" || ent === "Ketu");
+
+    if(document.getElementById("useConjPlanets")?.checked && !skipRaKeEnt) {
+        let txt = getConjunctPlanets(ent);
+        let planets = txt.match(/\((.*?)\)/g) || [];
+        planets.forEach(x => x.replace(/[()]/g,"").split(",").forEach(n => nums.push(parseInt(n))));
+    }
+
+    if(document.getElementById("useAspects")?.checked && !skipRaKeEnt) {
+        let asp = getAspectHouses(ent);
+        if(asp && asp !== "-") asp.split(",").forEach(n => nums.push(parseInt(n)));
+    }
+
     if(document.getElementById("useConjCusps")?.checked) {
         let allowRaKe = document.getElementById("includeRaKeCuspal")?.checked;
-        if(allowRaKe || (ent !== "Rahu" && ent !== "Ketu")) {
+        if(!skipRaKeEnt && (allowRaKe || (ent !== "Rahu" && ent !== "Ketu"))) {
             let c = getCuspalConjunct(ent);
             if(c && c !== "-") c.split(",").forEach(x => nums.push(parseInt(x)));
         }
     }
 
-    // Deduplicate and sort only the lordships/cusps
-    nums = [...new Set(nums.filter(x => !isNaN(x)))].sort((a,b) => a - b);
-    
-    // Format perfectly as House-Lords without deleting the house duplicate
+    if (!isStarlord && !skipRaKeEnt) {
+        let aspBy = getAspectedBy(ent);
+        if (aspBy && aspBy !== "-") {
+            let extracted = aspBy.match(/\((.*?)\)/g) || [];
+            extracted.forEach(x => {
+                x.replace(/[()]/g, "").split(",").forEach(n => nums.push(parseInt(n)));
+            });
+        }
+    }
+
+    nums = nums.filter(x => !isNaN(x));
+    nums = [...new Set(nums)];
+
+    if (isSplitView2) {
+        if (h) {
+            let hInt = parseInt(h);
+            nums = nums.filter(x => x !== hInt);
+            if (ownedHouses.includes(hInt)) nums.push(hInt);
+            nums.push(hInt);
+        }
+    } else {
+        if (h && !ownedHouses.includes(parseInt(h))) {
+            nums = nums.filter(x => x !== parseInt(h));
+        }
+    }
+
+    nums.sort((a,b) => a - b);
     if(!h) return nums.join(",") || "-";
     if(nums.length === 0) return `${h}`;
+    if ((ent === "Rahu" || ent === "Ketu") && nums.length === 1 && nums[0] === parseInt(h)) return `${h}`;
+    
     return `${h}-${nums.join(",")}`;
 }
 
-// UPDATED: Main extraction logic to handle both views (with duplicates allowed in Normal View)
+// UPDATED: Main extraction logic to handle all views (UNIFIED & FIXED)
 function getMixer3Nums(p, showP, showS) {
-    if (window.__dba3SplitView) {
-        let pBlock = "";
-        let sBlock = "";
+    let isRaKeSpecial = document.getElementById("rahuKetuSpecial")?.checked === false;
 
-        if (showP) {
-            pBlock = buildSplitBlock(p);
-        }
-        if (showS) {
-            let sl = getStarLord(p);
-            if (sl) sBlock = buildSplitBlock(sl);
-        }
+    if (window.__dba3SplitView || window.__dba3SplitView2) {
+        let isSplit2 = window.__dba3SplitView2;
+        let pBlock = showP ? buildSplitBlock(p, isSplit2, false) : "";
+        let sl = getStarLord(p);
+        let sBlock = (showS && sl) ? buildSplitBlock(sl, isSplit2, true) : "";
 
         if (pBlock && sBlock) return `${pBlock} + ${sBlock}`;
-        if (pBlock) return pBlock;
-        if (sBlock) return sBlock;
-        return "-";
+        return pBlock || sBlock || "-";
     } else {
-        // NORMAL VIEW LOGIC (Duplicates Allowed)
         let nums = [];
         if(showP) {
             let h = getPlanetHouse(p);
             if(h) nums.push(parseInt(h));
-            let l = (p === "Rahu" || p === "Ketu") ? "" : getLordsOf(p);
-            if(l && l!=="-") l.split(",").forEach(x=>nums.push(parseInt(x)));
 
-            // --- NEW: INJECT DISPOSITOR (NORMAL VIEW) ---
-            if (window.__dba3AddDispositor && (p === "Rahu" || p === "Ketu")) {
+            let skipRaKeP = isRaKeSpecial && (p === "Rahu" || p === "Ketu");
+
+            if (p === "Rahu" || p === "Ketu") {
+                if (!isRaKeSpecial) {
+                    let sign = getPlanetSign(p);
+                    let disp = SIGN_LORDS[sign];
+                    if (disp) {
+                        let dHouse = getPlanetHouse(disp);
+                        if (dHouse) nums.push(parseInt(dHouse));
+                        let dLords = getLordsOf(disp);
+                        if (dLords && dLords !== "-") dLords.split(",").forEach(x => nums.push(parseInt(x)));
+                    }
+                }
+            } else {
+                let l = getLordsOf(p);
+                if(l && l!=="-") l.split(",").forEach(x=>nums.push(parseInt(x)));
+            }
+
+            // Normal View Dispositor Checkbox Injection
+            if (window.__dba3AddDispositor && (p === "Rahu" || p === "Ketu") && isRaKeSpecial) {
                 let sign = getPlanetSign(p);
                 let disp = SIGN_LORDS[sign];
                 if (disp) {
                     let dHouse = getPlanetHouse(disp);
                     if (dHouse) nums.push(parseInt(dHouse));
                     let dLords = getLordsOf(disp);
-                    if (dLords && dLords !== "-") {
-                        dLords.split(",").forEach(x => nums.push(parseInt(x)));
+                    if (dLords && dLords !== "-") dLords.split(",").forEach(x => nums.push(parseInt(x)));
+                    if(document.getElementById("useConjCusps")?.checked) {
+                        let dCusps = getCuspalConjunct(disp);
+                        if(dCusps && dCusps !== "-") dCusps.split(",").forEach(x => nums.push(parseInt(x)));
                     }
                 }
             }
+
+            if(document.getElementById("useConjPlanets")?.checked && !skipRaKeP) {
+                let cp = getConjunctPlanets(p);
+                if (cp && cp !== "-") {
+                    let extracted = cp.match(/\((.*?)\)/g) || [];
+                    extracted.forEach(x => { x.replace(/[()]/g, "").split(",").forEach(n => nums.push(parseInt(n))); });
+                }
+            }
+
+            if(document.getElementById("useAspects")?.checked && !skipRaKeP) {
+                let asp = getAspectHouses(p);
+                if (asp && asp !== "-") asp.split(",").forEach(n => nums.push(parseInt(n)));
+            }
+
+            if(document.getElementById("useConjCusps")?.checked) {
+                let allowRaKe = document.getElementById("includeRaKeCuspal")?.checked;
+                if (!skipRaKeP && (allowRaKe || (p !== "Rahu" && p !== "Ketu"))) {
+                    let c = getCuspalConjunct(p);
+                    if(c && c!=="-") c.split(",").forEach(x=>nums.push(parseInt(x)));
+                }
+            }
+
+            if (!skipRaKeP) {
+                let aspBy = getAspectedBy(p);
+                if (aspBy && aspBy !== "-") {
+                    let extracted = aspBy.match(/\((.*?)\)/g) || [];
+                    extracted.forEach(x => {
+                        x.replace(/[()]/g, "").split(",").forEach(n => nums.push(parseInt(n)));
+                    });
+                }
+            }
         }
+        
         if(showS) {
             let sl = getStarLord(p);
             if(sl) {
                 let h = getPlanetHouse(sl);
                 if(h) nums.push(parseInt(h));
-                let l = (sl === "Rahu" || sl === "Ketu") ? "" : getLordsOf(sl);
-                if(l && l!=="-") l.split(",").forEach(x=>nums.push(parseInt(x)));
+                
+                let skipRaKeS = isRaKeSpecial && (sl === "Rahu" || sl === "Ketu");
 
-                // --- NEW: INJECT DISPOSITOR (NORMAL VIEW) ---
-                if (window.__dba3AddDispositor && (sl === "Rahu" || sl === "Ketu")) {
-                    let sign = getPlanetSign(sl);
-                    let disp = SIGN_LORDS[sign];
-                    if (disp) {
-                        let dHouse = getPlanetHouse(disp);
-                        if (dHouse) nums.push(parseInt(dHouse));
-                        let dLords = getLordsOf(disp);
-                        if (dLords && dLords !== "-") {
-                            dLords.split(",").forEach(x => nums.push(parseInt(x)));
-                        }
+                if (!(sl === "Rahu" || sl === "Ketu")) {
+                    let l = getLordsOf(sl);
+                    if(l && l!=="-") l.split(",").forEach(x=>nums.push(parseInt(x)));
+                }
+
+                if(document.getElementById("useConjPlanets")?.checked && !skipRaKeS) {
+                    let cp = getConjunctPlanets(sl);
+                    if (cp && cp !== "-") {
+                        let extracted = cp.match(/\((.*?)\)/g) || [];
+                        extracted.forEach(x => { x.replace(/[()]/g, "").split(",").forEach(n => nums.push(parseInt(n))); });
+                    }
+                }
+
+                if(document.getElementById("useAspects")?.checked && !skipRaKeS) {
+                    let asp = getAspectHouses(sl);
+                    if (asp && asp !== "-") asp.split(",").forEach(n => nums.push(parseInt(n)));
+                }
+
+                if(document.getElementById("useConjCusps")?.checked) {
+                    let allowRaKe = document.getElementById("includeRaKeCuspal")?.checked;
+                    if (!skipRaKeS && (allowRaKe || (sl !== "Rahu" && sl !== "Ketu"))) {
+                        let c = getCuspalConjunct(sl);
+                        if(c && c!=="-") c.split(",").forEach(x=>nums.push(parseInt(x)));
                     }
                 }
             }
         }
-        if(document.getElementById("useConjCusps")?.checked) {
-            let allowRaKe = document.getElementById("includeRaKeCuspal")?.checked;
-            if(showP && (allowRaKe || (p!=="Rahu" && p!=="Ketu"))) {
-                let c = getCuspalConjunct(p);
-                if(c && c!=="-") c.split(",").forEach(x=>nums.push(parseInt(x)));
-            }
-            if(showS) {
-                let sl = getStarLord(p);
-                if(sl && (allowRaKe || (sl!=="Rahu" && sl!=="Ketu"))) {
-                    let c = getCuspalConjunct(sl);
-                    if(c && c!=="-") c.split(",").forEach(x=>nums.push(parseInt(x)));
-                }
-            }
-        }
-        // Retain duplicates for Normal View
-        return nums.filter(x=>!isNaN(x)).sort((a,b)=>a-b).join(",") || "-";
+        
+        let finalNums = nums.filter(x=>!isNaN(x));
+        if (window.__dba3RemoveDuplicates !== false) finalNums = [...new Set(finalNums)];
+        return finalNums.sort((a,b)=>a-b).join(",") || "-";
     }
 }
-
-
-
-
-
-
-
 
 function buildDashaBukthiAntaraMixer() {
     if (typeof window.__dba3Expanded === 'undefined') {
@@ -5640,7 +6918,7 @@ function buildDashaBukthiAntaraMixer() {
     title.style.margin = "0 0 20px 0";
     title.style.fontSize = "26px";
     title.style.fontWeight = "500";
-    title.style.textAlign = "left"; // Forces left alignment, overriding global CSS
+    title.style.textAlign = "left"; 
     title.style.background = "linear-gradient(90deg,#10b981,#38bdf8)";
     title.style.webkitBackgroundClip = "text";
     title.style.webkitTextFillColor = "transparent";
@@ -5683,7 +6961,7 @@ function buildDashaBukthiAntaraMixer() {
     tabsDiv.style = "display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:20px;";
     order.forEach(p => {
         let btn = document.createElement("button");
-        btn.innerHTML = getPlanetLabel(p); // No brackets
+        btn.innerHTML = getPlanetLabel(p); 
         btn.style.background = (p === window.__dba3Dasha) ? "linear-gradient(135deg,#10b981,#d4af37)" : "#010a08";
         btn.style.color = (p === window.__dba3Dasha) ? "#021b16" : "#10b981";
         btn.style.border = "1px solid #10b981";
@@ -5693,7 +6971,6 @@ function buildDashaBukthiAntaraMixer() {
         
         btn.onclick = () => {
             window.__dba3Dasha = p;
-            // Dynamic Untenanted behavior: Check Planet, Uncheck Starlord, but leave fully clickable
             if (getUntenantedPlanets().includes(p)) {
                 window.__dba3DashaP = true;
                 window.__dba3DashaS = false; 
@@ -5708,10 +6985,10 @@ function buildDashaBukthiAntaraMixer() {
     innerWrap.appendChild(tabsDiv);
 
     // ==========================================
-    // NEW: VIEW TOGGLES (Normal vs Split View)
+    // VIEW TOGGLES 
     // ==========================================
     let viewToggleWrap = document.createElement("div");
-    viewToggleWrap.style = "display:flex; justify-content:center; gap:30px; margin-bottom:25px;";
+    viewToggleWrap.style = "display:flex; justify-content:center; gap:25px; margin-bottom:25px; flex-wrap:wrap;";
 
     let normalLabel = document.createElement("label");
     normalLabel.style = "font-weight:900; color:#d4af37; cursor:pointer; font-size:18px;";
@@ -5725,14 +7002,19 @@ function buildDashaBukthiAntaraMixer() {
     splitCb.type = "checkbox";
     splitCb.checked = window.__dba3SplitView;
 
-    // Mutual exclusivity logic
+    let split2Label = document.createElement("label");
+    split2Label.style = "font-weight:900; color:#d4af37; cursor:pointer; font-size:18px;";
+    let split2Cb = document.createElement("input");
+    split2Cb.type = "checkbox";
+    split2Cb.checked = window.__dba3SplitView2;
+
     normalCb.onchange = (e) => {
         if (e.target.checked) {
             window.__dba3NormalView = true;
             window.__dba3SplitView = false;
+            window.__dba3SplitView2 = false;
         } else {
-            window.__dba3NormalView = false;
-            window.__dba3SplitView = true; // Fallback to ensure one is always active
+            e.target.checked = true;
         }
         buildDashaBukthiAntaraMixer();
     };
@@ -5741,9 +7023,20 @@ function buildDashaBukthiAntaraMixer() {
         if (e.target.checked) {
             window.__dba3SplitView = true;
             window.__dba3NormalView = false;
+            window.__dba3SplitView2 = false;
         } else {
+            e.target.checked = true;
+        }
+        buildDashaBukthiAntaraMixer();
+    };
+
+    split2Cb.onchange = (e) => {
+        if (e.target.checked) {
+            window.__dba3SplitView2 = true;
             window.__dba3SplitView = false;
-            window.__dba3NormalView = true;
+            window.__dba3NormalView = false;
+        } else {
+            e.target.checked = true;
         }
         buildDashaBukthiAntaraMixer();
     };
@@ -5752,9 +7045,12 @@ function buildDashaBukthiAntaraMixer() {
     normalLabel.appendChild(document.createTextNode(" Normal View"));
 
     splitLabel.appendChild(splitCb);
-    splitLabel.appendChild(document.createTextNode(" Split View"));
+    splitLabel.appendChild(document.createTextNode(" Split View 1"));
 
-    // --- NEW: ADD DISPOSITOR CHECKBOX ---
+    split2Label.appendChild(split2Cb);
+    split2Label.appendChild(document.createTextNode(" Split View 2"));
+
+    // --- ADD DISPOSITOR CHECKBOX ---
     if (typeof window.__dba3AddDispositor === 'undefined') window.__dba3AddDispositor = false;
 
     let dispLabel = document.createElement("label");
@@ -5771,27 +7067,34 @@ function buildDashaBukthiAntaraMixer() {
     dispLabel.appendChild(dispCb);
     dispLabel.appendChild(document.createTextNode(" Add Dispositor"));
 
+    // --- REMOVE DUPLICATES CHECKBOX ---
+    if (typeof window.__dba3RemoveDuplicates === 'undefined') window.__dba3RemoveDuplicates = true;
+
+    let dupLabel = document.createElement("label");
+    dupLabel.style = "font-weight:900; color:#d4af37; cursor:pointer; font-size:18px; margin-left:15px;";
+    let dupCb = document.createElement("input");
+    dupCb.type = "checkbox";
+    dupCb.checked = window.__dba3RemoveDuplicates;
+
+    dupCb.onchange = (e) => {
+        window.__dba3RemoveDuplicates = e.target.checked;
+        buildDashaBukthiAntaraMixer();
+    };
+
+    dupLabel.appendChild(dupCb);
+    dupLabel.appendChild(document.createTextNode(" Remove Duplicates"));
+
     viewToggleWrap.appendChild(normalLabel);
     viewToggleWrap.appendChild(splitLabel);
-    viewToggleWrap.appendChild(dispLabel); // Append new toggle
+    viewToggleWrap.appendChild(split2Label);
+    viewToggleWrap.appendChild(dispLabel); 
+    viewToggleWrap.appendChild(dupLabel); 
     innerWrap.appendChild(viewToggleWrap);
     // ==========================================
 
-    // CHECKBOXES (6 Total - Fully Unlocked)
+    // CHECKBOXES
     let cbDiv = document.createElement("div");
-    cbDiv.style = "display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; text-align:center; margin-bottom:50px;"; // Changed 20px to 50px for the top gap
-
-
-
-
-
-
-
-
-
-
-
-
+    cbDiv.style = "display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; text-align:center; margin-bottom:50px;";
 
     function createCbCol(titleStr, pVar, sVar) {
         let col = document.createElement("div");
@@ -5823,37 +7126,21 @@ function buildDashaBukthiAntaraMixer() {
         col.appendChild(sLabel);
         return col;
     }
-	
-	
-	
-	
-	
-	
-	
-	
-	
 
     cbDiv.appendChild(createCbCol("Dasha", "__dba3DashaP", "__dba3DashaS"));
     cbDiv.appendChild(createCbCol("Bukthi", "__dba3BukthiP", "__dba3BukthiS"));
     cbDiv.appendChild(createCbCol("Antara", "__dba3AntaraP", "__dba3AntaraS"));
     innerWrap.appendChild(cbDiv);
 
-    // 81-ROW TABLE WITH 9 ISLANDS
+    // TABLE GENERATION
     const table = document.createElement("table");
     table.style.width = "100%";
     table.style.borderCollapse = "collapse";
-    table.style.background = "transparent"; // Made transparent to show gaps
+    table.style.background = "transparent";
     
-	
-	
-	
-    // Header
     let trHead = document.createElement("tr");
-    
-    // Theme-accurate jewel tone gradient: Deep Emerald -> Royal Blue -> Rich Violet
     trHead.style.background = "linear-gradient(90deg, #064e3b 0%, #1e3a8a 50%, #4a044e 100%)";
     
-    // Kept the thick black outline & drop shadow so the big text still pops
     let outlineCSS = "-webkit-text-stroke: 1.5px #000; text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;";
     
     trHead.innerHTML = `
@@ -5862,20 +7149,13 @@ function buildDashaBukthiAntaraMixer() {
         <th style="border:1px solid #10b981; padding:16px; font-weight:900; font-size:26px; letter-spacing:2px; text-transform:uppercase; color:#a855f7; ${outlineCSS}">Antara</th>
     `;
     table.appendChild(trHead);
-	
-	
-	
-	
-
-    // Insert visual gap above the first Bukthi island
+    
     let initialGap = document.createElement("tr");
-    initialGap.innerHTML = `<td colspan="3" style="height:50px; border:none;"></td>`; // Changed 70px to 50px for the bottom gap
+    initialGap.innerHTML = `<td colspan="3" style="height:50px; border:none;"></td>`; 
     table.appendChild(initialGap);
 
     let dPlanet = window.__dba3Dasha;
-	
-	
-	
+    
     let dIndex = DASHA_ORDER.indexOf(dPlanet);
     let bukthiOrder = [...DASHA_ORDER.slice(dIndex), ...DASHA_ORDER.slice(0, dIndex)];
     let dNums = getMixer3Nums(dPlanet, window.__dba3DashaP, window.__dba3DashaS);
@@ -5888,7 +7168,7 @@ function buildDashaBukthiAntaraMixer() {
         antaraOrder.forEach(aPlanet => {
             let aNums = getMixer3Nums(aPlanet, window.__dba3AntaraP, window.__dba3AntaraS);
             let tr = document.createElement("tr");
-            tr.style.background = "#010a08"; // Paint the data rows
+            tr.style.background = "#010a08"; 
             tr.innerHTML = `
                 <td style="border:1px solid #10b981; padding:6px; font-weight:500; text-align:center;">
                     ${getPlanetLabel(dPlanet)} - <span style="color:#38bdf8;">${dNums}</span>
@@ -5903,7 +7183,6 @@ function buildDashaBukthiAntaraMixer() {
             table.appendChild(tr);
         });
 
-        // Insert visual gap (Island Split) after each Bukthi chunk of 9 rows, except the last one
         if (bIdx < bukthiOrder.length - 1) {
             let gap = document.createElement("tr");
             gap.innerHTML = `<td colspan="3" style="height:70px; border:none;"></td>`;
@@ -5923,21 +7202,6 @@ if (typeof window.__oldBuildVim === "undefined") {
 }
 
 setTimeout(buildDashaBukthiAntaraMixer, 100);
-
-
-
-
-
-
-
-
-
-
-
-
-
 </script>
-
-
 </body>
 </html>
