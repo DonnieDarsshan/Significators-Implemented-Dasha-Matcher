@@ -431,13 +431,32 @@ button{
   font-weight:500;
 }
 
+/* GLOBAL TABLE ROW HOVER HIGHLIGHT */
+/* Targets all standard tables, automatically ignoring the div-based Vimshottari/Yogini dashas */
+table tr:hover td {
+  background-color: #064e3b !important; 
+  transition: background-color 0.15s ease-in-out;
+  cursor: pointer; /* Shows a pointing finger so users know it's clickable */
+}
 
 
 
 
 
+/* GLOBAL TABLE ROW CLICK HIGHLIGHT */
+table tr.clicked-row td,
+table tr.clicked-row:hover td {
+  background: linear-gradient(90deg, #dc143c 0%, #8b0000 100%) !important; 
+  color: #ffffff !important; /* Forces base text to pure white */
+  text-shadow: 1px 1px 3px #000, 0px 0px 5px #000 !important; /* Sharper, darker black shadow */
+}
 
-
+/* Forces inline colored spans (like the blue/yellow planets) to also turn white when clicked */
+table tr.clicked-row td *,
+table tr.clicked-row:hover td * {
+  color: #ffffff !important;
+  text-shadow: 1px 1px 3px #000, 0px 0px 5px #000 !important;
+}
 
 </style>
 
@@ -584,10 +603,10 @@ button{
 
 <div id="sigOptions" style="
   display:flex;
-  flex-wrap:wrap;
+  flex-direction:column;
   justify-content:center;
   align-items:center;
-  gap:20px;
+  gap:15px;
   margin-top:15px;
   padding:12px;
   background:linear-gradient(180deg,#021b16,#010a08);
@@ -596,15 +615,21 @@ button{
   font-weight:900;
   color:#d4af37;
 ">
-  <label><input type="checkbox" id="useConjPlanets"> Conjunct Planets</label>
-  <label><input type="checkbox" id="useAspects" > Aspects</label>
-  <label><input type="checkbox" id="useConjCusps" checked> Conjunct Cuspal</label>
-  <label><input type="checkbox" id="ignoreRaKeLords" checked> Ignore Ra/Ke Lords</label>
-  <label><input type="checkbox" id="includeRaKeCuspal"> Ra/Ke Cuspal</label>
-  <label><input type="checkbox" id="splitSig"> Split</label>
-  <label><input type="checkbox" id="splitSig2" checked> Split 2</label>
-  <label><input type="checkbox" id="ignoreUntenanted"> UNTENTED</label>
-  <label style="color:#10b981; border:1px solid #10b981; padding:4px 10px; border-radius:6px; background:#010a08;"><input type="checkbox" id="rahuKetuSpecial" checked> Ra/Ke Special Rule</label>
+  <div style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:20px;">
+      <label><input type="checkbox" id="useConjPlanets"> Conjunct Planets</label>
+      <label><input type="checkbox" id="useAspects" > Aspects</label>
+      <label><input type="checkbox" id="useConjCusps" checked> Conjunct Cuspal</label>
+      <label><input type="checkbox" id="ignoreRaKeLords" checked> Ignore Ra/Ke Lords</label>
+      <label><input type="checkbox" id="includeRaKeCuspal"> Ra/Ke Cuspal</label>
+      <label><input type="checkbox" id="splitSig"> Split 1</label>
+      <label><input type="checkbox" id="splitSig2"> Split 2</label>
+      <label><input type="checkbox" id="ignoreUntenanted"> UNTENTED</label>
+  </div>
+  <div style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:20px; width:100%; border-top:1px dashed #064e3b; padding-top:10px;">
+      <label style="color:#10b981; border:1px solid #10b981; padding:4px 10px; border-radius:6px; background:#010a08;"><input type="checkbox" id="rahuKetuSpecial" checked> Ra/Ke Special Rule</label>
+      <label><input type="checkbox" id="includeRaKeAspectedBy"> Include Aspected By</label>
+      <label><input type="checkbox" id="dashaOriginalToggle"> Dasha Original</label>
+  </div>
 </div>
 
 
@@ -2216,14 +2241,15 @@ async function fetchFromCloud() {
                 "kpMode", "trueNode", "originalASC",
                 "useConjCusps", "ignoreRaKeLords", "hideVimDates", 
                 "useMonthNames", "knVimToggle", "birthStartToggle", 
-                "showAgeYears", "hideBhuktiAge", "splitSig2",
+                "showAgeYears", "hideBhuktiAge",
                 "rahuKetuSpecial"
             ];
             const defaultUncheckedIds = [
                 "sign2signMode", "vedicMode", 
                 "showCusps", "useConjPlanets", "useAspects",
-                "includeRaKeCuspal", "splitSig", 
-                "ignoreUntenanted", "hideAntaraRest", "equalMode"
+                "includeRaKeCuspal", "splitSig", "splitSig2",
+                "ignoreUntenanted", "hideAntaraRest", "equalMode",
+                "includeRaKeAspectedBy"
             ];
 
             defaultCheckedIds.forEach(id => { let el = document.getElementById(id); if(el) el.checked = true; });
@@ -2501,14 +2527,14 @@ function loadSwissJSON(){
         "kpMode", "trueNode", "originalASC",
         "useConjCusps", "ignoreRaKeLords", "hideVimDates", 
         "useMonthNames", "knVimToggle", "birthStartToggle", 
-        "showAgeYears", "hideBhuktiAge", "splitSig2",
+        "showAgeYears", "hideBhuktiAge",
         "rahuKetuSpecial" // ✅ FORCE DEFAULT ON
       ];
       
       const defaultUncheckedIds = [
         "sign2signMode", "vedicMode", 
         "showCusps", "useConjPlanets", "useAspects",
-        "includeRaKeCuspal", "splitSig", 
+        "includeRaKeCuspal", "splitSig", "splitSig2",
         "ignoreUntenanted", "hideAntaraRest", "equalMode"
       ];
 
@@ -2671,14 +2697,15 @@ document.getElementById("trueNode")?.addEventListener("change", () => {
 
 
 
-["useConjPlanets","useAspects","useConjCusps","ignoreRaKeLords","includeRaKeCuspal","ignoreUntenanted","rahuKetuSpecial"].forEach(id=>{
+// ✅ REPLACE IT WITH THIS NEW CODE:
+["useConjPlanets","useAspects","useConjCusps","ignoreRaKeLords","includeRaKeCuspal","ignoreUntenanted","rahuKetuSpecial", "includeRaKeAspectedBy", "dashaOriginalToggle"].forEach(id=>{
   document.getElementById(id)?.addEventListener("change",()=>{
     buildSignificatorTable();
     buildSixFoldTables(); 
     buildNadiTables();    
     buildVimshottari();
-    buildDashaBukthiMixer();         // <-- ADDED THIS TO FIX 2-LEVEL MIXER
-    buildDashaBukthiAntaraMixer();   // <-- ADDED THIS TO FIX 3-LEVEL MIXER
+    buildDashaBukthiMixer();         
+    buildDashaBukthiAntaraMixer();   
   });
 });
 
@@ -2970,14 +2997,16 @@ sigPlanets.forEach(p => {
 		  }
 		}
 
-		[aspectedByP, aspectedByS].forEach(txt => {
-		  if(txt && txt !== "-"){
-		    let planets = txt.match(/\((.*?)\)/g) || [];
-		    planets.forEach(x => {
-		      x.replace(/[()]/g,"").split(",").forEach(n => values.push(n));
-		    });
-		  }
-		});
+		if(document.getElementById("includeRaKeAspectedBy")?.checked){
+            [aspectedByP, aspectedByS].forEach(txt => {
+              if(txt && txt !== "-"){
+                let planets = txt.match(/\((.*?)\)/g) || [];
+                planets.forEach(x => {
+                  x.replace(/[()]/g,"").split(",").forEach(n => values.push(n));
+                });
+              }
+            });
+        }
 
 		  let nums=values
 			.map(x=>parseInt(x,10))
@@ -4539,7 +4568,7 @@ function buildDashaBukthiMixer() {
               }
           }
 
-          if (!skipRaKeP) {
+          if (!skipRaKeP && document.getElementById("includeRaKeAspectedBy")?.checked) {
               let aspBy = getAspectedBy(p);
               if (aspBy && aspBy !== "-") {
                   let extracted = aspBy.match(/\((.*?)\)/g) || [];
@@ -4611,9 +4640,6 @@ let dashaPlanet = select.value;
   let isFourFold = window.__mixerFourFoldState; // Automatically true on load
   let isAddDispositor = window.__mixerAddDispositorState; // Grab the new toggle state
 
-  // --- PASS "true" as the 5th argument (Dasha Col) and pass the isAddDispositor state as the 6th ---
-  let dashaNums = getMixerMixedNums(dashaPlanet, isUntenanted, isStarlordOnly, isFourFold, true, isAddDispositor);
-
   let startIndex = DASHA_ORDER.indexOf(dashaPlanet);
   let bukthiOrder = [...DASHA_ORDER.slice(startIndex), ...DASHA_ORDER.slice(0, startIndex)];
   
@@ -4623,30 +4649,44 @@ let dashaPlanet = select.value;
   const bukthiColor = "#f472b6"; // Pink
   const mixedColor = "#ffff00"; // Yellow for duplicates/mixed
 
+  // --- Pre-calculate Sublord and Sub-Sublord for the Dasha Planet ---
+  let dashaPlanetSubL = getSubLord(dashaPlanet) || dashaPlanet;
+  let dashaPlanetSubSubL = getSubSubLord(dashaPlanet) || dashaPlanet;
+
   // --- Helper to extract Rahu/Ketu Dispositor placed house & lordships ---
   function getNodeInfo(p, showDispositor) {
-    // Only display if the planet is a node AND the toggle is checked
     if (!showDispositor || (p !== "Rahu" && p !== "Ketu")) return "";
     let sign = getPlanetSign(p);
     let dispositor = SIGN_LORDS[sign];
     if (!dispositor) return "";
-    
     let placed = getPlanetHouse(dispositor);
     let lords = getLordsOf(dispositor); 
-    
     return `<br><span style="font-size:12px; color:#a855f7;">[${getShort(dispositor)}: ${placed}, ${lords}]</span>`;
   }
 
-  bukthiOrder.forEach(bukthiPlanet => {
+  // ✅ REPLACE IT WITH THIS NEW CODE:
+  let isDashaOriginalMixer1 = document.getElementById("dashaOriginalToggle")?.checked;
+
+  bukthiOrder.forEach((bukthiPlanet, bIdx) => {
     let tr = document.createElement("tr");
 
-    // Bukthi ignores Untenanted & StarlordOnly, but RESPECTS 4-Fold vs 6-Fold (Pass false for Dasha Col)
+    // --- NEW LOGIC: Dynamic Dasha Planet based on Bhukti group (For NUMBERS only) ---
+    let effectiveDashaPlanet = dashaPlanet;
+    
+    // Only apply the 3-3-3 rule if 'Dasha Original' is OFF
+    if (!isDashaOriginalMixer1) {
+        if (bIdx >= 3 && bIdx <= 5) {
+            effectiveDashaPlanet = dashaPlanetSubL;     // Middle 3: Sublord
+        } else if (bIdx >= 6) {
+            effectiveDashaPlanet = dashaPlanetSubSubL;  // Last 3: Sub-Sublord
+        }
+    }
+
+    // Calculate Dasha numbers dynamically for the effective planet
+    let dashaNums = getMixerMixedNums(effectiveDashaPlanet, isUntenanted, isStarlordOnly, isFourFold, true, isAddDispositor);
+    
+    // Bukthi ignores Untenanted & StarlordOnly
     let bukthiNums = getMixerMixedNums(bukthiPlanet, false, false, isFourFold, false, isAddDispositor);
-	
-	
-	
-	
-	
 	
     // Group numbers and count occurrences
     let countMap = {};
@@ -4667,15 +4707,10 @@ let dashaPlanet = select.value;
     let mixedHtml = sortedUniqueVals.map(val => {
       let data = countMap[val];
       let color = mixedColor; // Default to yellow
-      
-      // If it only appears once, use its original source color
       if (data.count === 1) {
         color = data.sources.has('dasha') ? dashaColor : bukthiColor;
       }
-      
-      // Add exponent if it appears more than once
       let displayVal = data.count > 1 ? `${val}<sup>${data.count}</sup>` : val;
-      
       return `<span style="color:${color}; font-weight:500;">${displayVal}</span>`;
     }).join("<span style='color:#ecfdf5'>, </span>");
 
@@ -4685,15 +4720,17 @@ let dashaPlanet = select.value;
     let bukthiStr = bukthiNums.length ? bukthiNums.join(", ") : "-";
 
     // Save extracted row data for the new Divider Table
+    // ✅ STRICTLY USING dashaPlanet name so the Divider Table says "Saturn - Mangala"
     window.__lastMixedData.push({
       planetName: `${getPlanetLabel(dashaPlanet)} - ${getPlanetLabel(bukthiPlanet)}`,
       mixedHtml: mixedHtml,
       nums: sortedUniqueVals
     });
 
+    // ✅ UI TABLE FIX: Uses effectiveDashaPlanet so the UI actually shows the 3-3-3 planet names!
     tr.innerHTML = `
       <td style="border:1px solid #10b981; padding:6px; font-weight:500; text-align:center;">
-        ${getPlanetLabel(dashaPlanet)} - <span style="color:${dashaColor}; font-weight:500;">${dashaStr}</span>
+        ${getPlanetLabel(effectiveDashaPlanet)} - <span style="color:${dashaColor}; font-weight:500;">${dashaStr}</span>
       </td>
       <td style="border:1px solid #10b981; padding:6px; font-weight:500; text-align:center;">
         ${getPlanetLabel(bukthiPlanet)} - <span style="color:${bukthiColor}; font-weight:500;">${bukthiStr}</span>
@@ -5136,32 +5173,30 @@ if(document.getElementById("useConjCusps")?.checked){
   }
 }
 
-  let allNumsAsp = [];
-  let entsToAspect = [forceStarlordOnly ? null : planet]; // Only check planet
+  if(document.getElementById("includeRaKeAspectedBy")?.checked){
+      let allNumsAsp = [];
+      let entsToAspect = [forceStarlordOnly ? null : planet]; // Only check planet
 
-  entsToAspect.forEach(ent=>{
-    if(!ent) return;
-    if (isRaKeSpecial && (ent === "Rahu" || ent === "Ketu")) return;
+      entsToAspect.forEach(ent=>{
+        if(!ent) return;
+        if (isRaKeSpecial && (ent === "Rahu" || ent === "Ketu")) return;
 
-    let aspBy = getAspectedBy(ent);
-	
-	
-    if(aspBy && aspBy !== "-"){
-	
-	
-	
-      let planets = aspBy.match(/\((.*?)\)/g) || [];
-      planets.forEach(x => {
-        x.replace(/[()]/g,"").split(",").forEach(n => allNumsAsp.push(parseInt(n)));
+        let aspBy = getAspectedBy(ent);
+        
+        if(aspBy && aspBy !== "-"){
+          let planets = aspBy.match(/\((.*?)\)/g) || [];
+          planets.forEach(x => {
+            x.replace(/[()]/g,"").split(",").forEach(n => allNumsAsp.push(parseInt(n)));
+          });
+        }
       });
-    }
-  });
 
-  allNumsAsp = allNumsAsp.filter(n=>!isNaN(n));
-  allNumsAsp = [...new Set(allNumsAsp)].sort((a,b)=>a-b);
+      allNumsAsp = allNumsAsp.filter(n=>!isNaN(n));
+      allNumsAsp = [...new Set(allNumsAsp)].sort((a,b)=>a-b);
 
-  if(allNumsAsp.length){
-    blocks.push(`${allNumsAsp.join(",")}`);
+      if(allNumsAsp.length){
+        blocks.push(`${allNumsAsp.join(",")}`);
+      }
   }
   
   return blocks.join(" + ") || "-";
@@ -5250,7 +5285,7 @@ function getPlanetSignificatorsSplit2(planet, forceUntenanted = false, forceStar
     let hInt = parseInt(house);
     nums = nums.filter(n => n !== hInt);
     
-    if (!isStarlord && !isRaKeSkipped) {
+    if (!isStarlord && !isRaKeSkipped && document.getElementById("includeRaKeAspectedBy")?.checked) {
       let aspBy = getAspectedBy(ent);
       if(aspBy && aspBy !== "-"){
         let extracted = aspBy.match(/\((.*?)\)/g) || [];
@@ -5413,14 +5448,16 @@ function getPlanetSignificators(planet, forceUntenanted = false, forceStarlordOn
      aspectedByP = "-";
   }
 
-  [aspectedByP].forEach(txt => {
-    if(txt && txt !== "-"){
-      let planets = txt.match(/\((.*?)\)/g) || [];
-      planets.forEach(x => {
-        x.replace(/[()]/g,"").split(",").forEach(n => values.push(n));
+  if(document.getElementById("includeRaKeAspectedBy")?.checked){
+      [aspectedByP].forEach(txt => {
+        if(txt && txt !== "-"){
+          let planets = txt.match(/\((.*?)\)/g) || [];
+          planets.forEach(x => {
+            x.replace(/[()]/g,"").split(",").forEach(n => values.push(n));
+          });
+        }
       });
-    }
-  });
+  }
 
 
   let nums=values
@@ -6673,9 +6710,9 @@ window.__dba3AntaraS = true;
 
 
 // NEW: Global state for the View modes
-if (typeof window.__dba3NormalView === 'undefined') window.__dba3NormalView = false;
+if (typeof window.__dba3NormalView === 'undefined') window.__dba3NormalView = true;
 if (typeof window.__dba3SplitView === 'undefined') window.__dba3SplitView = false; // Split View 1 Default OFF
-if (typeof window.__dba3SplitView2 === 'undefined') window.__dba3SplitView2 = true; // Split View 2 Default ON
+if (typeof window.__dba3SplitView2 === 'undefined') window.__dba3SplitView2 = false; // Split View 2 Default ON
 
 // NEW: Helper function to generate the "House-Lords" format
 function buildSplitBlock(ent, isSplitView2, isStarlord = false) {
@@ -6729,7 +6766,7 @@ function buildSplitBlock(ent, isSplitView2, isStarlord = false) {
         }
     }
 
-    if (!isStarlord && !skipRaKeEnt) {
+    if (!isStarlord && !skipRaKeEnt && document.getElementById("includeRaKeAspectedBy")?.checked) {
         let aspBy = getAspectedBy(ent);
         if (aspBy && aspBy !== "-") {
             let extracted = aspBy.match(/\((.*?)\)/g) || [];
@@ -6836,7 +6873,7 @@ function getMixer3Nums(p, showP, showS) {
                 }
             }
 
-            if (!skipRaKeP) {
+            if (!skipRaKeP && document.getElementById("includeRaKeAspectedBy")?.checked) {
                 let aspBy = getAspectedBy(p);
                 if (aspBy && aspBy !== "-") {
                     let extracted = aspBy.match(/\((.*?)\)/g) || [];
@@ -7156,11 +7193,33 @@ function buildDashaBukthiAntaraMixer() {
 
     let dPlanet = window.__dba3Dasha;
     
+    // Calculate Sublord and Sub-Sublord for the Dasha Planet
+    let dPlanetSubL = getSubLord(dPlanet) || dPlanet; 
+    let dPlanetSubSubL = getSubSubLord(dPlanet) || dPlanet;
+
     let dIndex = DASHA_ORDER.indexOf(dPlanet);
     let bukthiOrder = [...DASHA_ORDER.slice(dIndex), ...DASHA_ORDER.slice(0, dIndex)];
-    let dNums = getMixer3Nums(dPlanet, window.__dba3DashaP, window.__dba3DashaS);
+
+    // ✅ REPLACE IT WITH THIS NEW CODE:
+    let isDashaOriginalMixer2 = document.getElementById("dashaOriginalToggle")?.checked;
 
     bukthiOrder.forEach((bPlanet, bIdx) => {
+        // --- NEW LOGIC: Dynamic Dasha Planet based on Bhukti group ---
+        let effectiveDashaPlanet = dPlanet;
+        
+        // Only apply the 3-3-3 rule if 'Dasha Original' is OFF
+        if (!isDashaOriginalMixer2) {
+            if (bIdx >= 3 && bIdx <= 5) {
+                effectiveDashaPlanet = dPlanetSubL;     // Middle 3: Sublord
+            } else if (bIdx >= 6) {
+                effectiveDashaPlanet = dPlanetSubSubL;  // Last 3: Sub-Sublord
+            }
+        }
+
+        // Calculate Dasha numbers dynamically for the effective planet
+        let dNums = getMixer3Nums(effectiveDashaPlanet, window.__dba3DashaP, window.__dba3DashaS);
+        // -------------------------------------------------------------
+
         let bIndex = DASHA_ORDER.indexOf(bPlanet);
         let antaraOrder = [...DASHA_ORDER.slice(bIndex), ...DASHA_ORDER.slice(0, bIndex)];
         let bNums = getMixer3Nums(bPlanet, window.__dba3BukthiP, window.__dba3BukthiS);
@@ -7171,7 +7230,7 @@ function buildDashaBukthiAntaraMixer() {
             tr.style.background = "#010a08"; 
             tr.innerHTML = `
                 <td style="border:1px solid #10b981; padding:6px; font-weight:500; text-align:center;">
-                    ${getPlanetLabel(dPlanet)} - <span style="color:#38bdf8;">${dNums}</span>
+                    ${getPlanetLabel(effectiveDashaPlanet)} - <span style="color:#38bdf8;">${dNums}</span>
                 </td>
                 <td style="border:1px solid #10b981; padding:6px; font-weight:500; text-align:center;">
                     ${getPlanetLabel(bPlanet)} - <span style="color:#f472b6;">${bNums}</span>
@@ -7202,6 +7261,21 @@ if (typeof window.__oldBuildVim === "undefined") {
 }
 
 setTimeout(buildDashaBukthiAntaraMixer, 100);
+
+/* =========================================================
+   GLOBAL TABLE ROW CLICK LISTENER
+========================================================= */
+document.addEventListener('click', function(e) {
+    // Check if the clicked element is inside a table row (tr)
+    let tr = e.target.closest('tr');
+    
+    // Ensure the row exists, is inside a standard table, and is NOT a header row (th)
+    if (tr && tr.closest('table') && !e.target.closest('th')) {
+        // Toggle the dark purple highlight class on and off
+        tr.classList.toggle('clicked-row');
+    }
+});
+
 </script>
 </body>
 </html>
