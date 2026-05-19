@@ -434,9 +434,9 @@ button{
 /* GLOBAL TABLE ROW HOVER HIGHLIGHT */
 /* Targets all standard tables, automatically ignoring the div-based Vimshottari/Yogini dashas */
 table tr:hover td {
-  background-color: #064e3b !important; 
+  background-color: #000000 !important; /* Changed to Pure Black */
   transition: background-color 0.15s ease-in-out;
-  cursor: pointer; /* Shows a pointing finger so users know it's clickable */
+  cursor: pointer; 
 }
 
 
@@ -627,8 +627,8 @@ table tr.clicked-row:hover td * {
   </div>
   <div style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:20px; width:100%; border-top:1px dashed #064e3b; padding-top:10px;">
       <label style="color:#10b981; border:1px solid #10b981; padding:4px 10px; border-radius:6px; background:#010a08;"><input type="checkbox" id="rahuKetuSpecial" checked> Ra/Ke Special Rule</label>
-      <label><input type="checkbox" id="includeRaKeAspectedBy"> Include Aspected By</label>
-      <label><input type="checkbox" id="dashaOriginalToggle"> Dasha Original</label>
+      <label><input type="checkbox" id="includeRaKeAspectedBy" checked> Include Aspected By</label>
+      <label><input type="checkbox" id="dashaOriginalToggle" checked> Dasha Original</label>
   </div>
 </div>
 
@@ -2242,14 +2242,14 @@ async function fetchFromCloud() {
                 "useConjCusps", "ignoreRaKeLords", "hideVimDates", 
                 "useMonthNames", "knVimToggle", "birthStartToggle", 
                 "showAgeYears", "hideBhuktiAge",
-                "rahuKetuSpecial"
+                "rahuKetuSpecial", "dashaOriginalToggle",
+                "includeRaKeAspectedBy"
             ];
             const defaultUncheckedIds = [
                 "sign2signMode", "vedicMode", 
                 "showCusps", "useConjPlanets", "useAspects",
                 "includeRaKeCuspal", "splitSig", "splitSig2",
-                "ignoreUntenanted", "hideAntaraRest", "equalMode",
-                "includeRaKeAspectedBy"
+                "ignoreUntenanted", "hideAntaraRest", "equalMode"
             ];
 
             defaultCheckedIds.forEach(id => { let el = document.getElementById(id); if(el) el.checked = true; });
@@ -2528,7 +2528,8 @@ function loadSwissJSON(){
         "useConjCusps", "ignoreRaKeLords", "hideVimDates", 
         "useMonthNames", "knVimToggle", "birthStartToggle", 
         "showAgeYears", "hideBhuktiAge",
-        "rahuKetuSpecial" // ✅ FORCE DEFAULT ON
+        "rahuKetuSpecial", "dashaOriginalToggle", // ✅ FORCE DEFAULT ON
+        "includeRaKeAspectedBy"
       ];
       
       const defaultUncheckedIds = [
@@ -6393,6 +6394,12 @@ setTimeout(()=>{
   highlightTodayVim();
 },50);
 
+// 🔥 WAKE UP RENDER SERVER IMMEDIATELY ON APP LAUNCH
+window.addEventListener('DOMContentLoaded', () => {
+    // A silent, no-cors ping just to spin up the container before the user fetches data
+    fetch('https://donnie-astro-engine.onrender.com/', { mode: 'no-cors' }).catch(() => {});
+});
+
 
 
 
@@ -6926,9 +6933,27 @@ function getMixer3Nums(p, showP, showS) {
     }
 }
 
+
+
+
+
+
+
+
+
+
+
+
 function buildDashaBukthiAntaraMixer() {
     if (typeof window.__dba3Expanded === 'undefined') {
-        window.__dba3Expanded = false; // Collapsed by default
+        window.__dba3Expanded = false; 
+    }
+
+    if (typeof window.__dba3ActiveHighlightNums === 'undefined') {
+        window.__dba3ActiveHighlightNums = new Set(); 
+    }
+    if (typeof window.__dba3NegativeHighlightNums === 'undefined') {
+        window.__dba3NegativeHighlightNums = new Set(); 
     }
 
     let wrap = document.getElementById("dba3MixerWrap");
@@ -6949,7 +6974,6 @@ function buildDashaBukthiAntaraMixer() {
     wrap.innerHTML = "";
     if(!window.__lastSwissData) return;
 
-    // TITLE (Collapsible Trigger)
     const title = document.createElement("h2");
     title.innerHTML = "DASHA BUKTHI ANTARA MIXER <span style='font-size:18px;'>▼</span>";
     title.style.margin = "0 0 20px 0";
@@ -6962,7 +6986,6 @@ function buildDashaBukthiAntaraMixer() {
     title.style.cursor = "pointer";
     wrap.appendChild(title);
 
-    // INNER CONTAINER (For expanding/collapsing)
     const innerWrap = document.createElement("div");
     innerWrap.style.display = window.__dba3Expanded ? "block" : "none";
     innerWrap.style.width = "100%";
@@ -6973,17 +6996,14 @@ function buildDashaBukthiAntaraMixer() {
         innerWrap.style.display = window.__dba3Expanded ? "block" : "none";
     };
 
-    // START TABS FROM BIRTH STARLORD OF MOON
     let birthStarlord = getStarLord("Chandra") || "Ketu";
     let startIndex = DASHA_ORDER.indexOf(birthStarlord);
     let order = [...DASHA_ORDER.slice(startIndex), ...DASHA_ORDER.slice(0, startIndex)];
     
-    // SELECT THE CURRENT RUNNING MAHADASHA BY DEFAULT
     let currentMaha = getCurrentMahadasha("Chandra");
 
     if(!window.__dba3Dasha || !DASHA_ORDER.includes(window.__dba3Dasha)) {
         window.__dba3Dasha = currentMaha;
-        // Dynamic Untenanted behavior on load for the selected planet
         if (getUntenantedPlanets().includes(window.__dba3Dasha)) {
             window.__dba3DashaP = true;
             window.__dba3DashaS = false;
@@ -6993,7 +7013,6 @@ function buildDashaBukthiAntaraMixer() {
         }
     }
 
-    // TABS (9 Planets)
     let tabsDiv = document.createElement("div");
     tabsDiv.style = "display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:20px;";
     order.forEach(p => {
@@ -7021,9 +7040,6 @@ function buildDashaBukthiAntaraMixer() {
     });
     innerWrap.appendChild(tabsDiv);
 
-    // ==========================================
-    // VIEW TOGGLES 
-    // ==========================================
     let viewToggleWrap = document.createElement("div");
     viewToggleWrap.style = "display:flex; justify-content:center; gap:25px; margin-bottom:25px; flex-wrap:wrap;";
 
@@ -7087,37 +7103,23 @@ function buildDashaBukthiAntaraMixer() {
     split2Label.appendChild(split2Cb);
     split2Label.appendChild(document.createTextNode(" Split View 2"));
 
-    // --- ADD DISPOSITOR CHECKBOX ---
     if (typeof window.__dba3AddDispositor === 'undefined') window.__dba3AddDispositor = false;
-
     let dispLabel = document.createElement("label");
     dispLabel.style = "font-weight:900; color:#d4af37; cursor:pointer; font-size:18px; margin-left:15px;";
     let dispCb = document.createElement("input");
     dispCb.type = "checkbox";
     dispCb.checked = window.__dba3AddDispositor;
-
-    dispCb.onchange = (e) => {
-        window.__dba3AddDispositor = e.target.checked;
-        buildDashaBukthiAntaraMixer();
-    };
-
+    dispCb.onchange = (e) => { window.__dba3AddDispositor = e.target.checked; buildDashaBukthiAntaraMixer(); };
     dispLabel.appendChild(dispCb);
     dispLabel.appendChild(document.createTextNode(" Add Dispositor"));
 
-    // --- REMOVE DUPLICATES CHECKBOX ---
     if (typeof window.__dba3RemoveDuplicates === 'undefined') window.__dba3RemoveDuplicates = true;
-
     let dupLabel = document.createElement("label");
     dupLabel.style = "font-weight:900; color:#d4af37; cursor:pointer; font-size:18px; margin-left:15px;";
     let dupCb = document.createElement("input");
     dupCb.type = "checkbox";
     dupCb.checked = window.__dba3RemoveDuplicates;
-
-    dupCb.onchange = (e) => {
-        window.__dba3RemoveDuplicates = e.target.checked;
-        buildDashaBukthiAntaraMixer();
-    };
-
+    dupCb.onchange = (e) => { window.__dba3RemoveDuplicates = e.target.checked; buildDashaBukthiAntaraMixer(); };
     dupLabel.appendChild(dupCb);
     dupLabel.appendChild(document.createTextNode(" Remove Duplicates"));
 
@@ -7127,11 +7129,9 @@ function buildDashaBukthiAntaraMixer() {
     viewToggleWrap.appendChild(dispLabel); 
     viewToggleWrap.appendChild(dupLabel); 
     innerWrap.appendChild(viewToggleWrap);
-    // ==========================================
 
-    // CHECKBOXES
     let cbDiv = document.createElement("div");
-    cbDiv.style = "display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; text-align:center; margin-bottom:50px;";
+    cbDiv.style = "display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; text-align:center; margin-bottom:20px;";
 
     function createCbCol(titleStr, pVar, sVar) {
         let col = document.createElement("div");
@@ -7169,7 +7169,133 @@ function buildDashaBukthiAntaraMixer() {
     cbDiv.appendChild(createCbCol("Antara", "__dba3AntaraP", "__dba3AntaraS"));
     innerWrap.appendChild(cbDiv);
 
+    let hlWrap = document.createElement("div");
+    hlWrap.style = "display:flex; flex-direction:column; gap:15px; margin-bottom:40px; background:linear-gradient(90deg, #021b16, #010a08); padding:15px; border:1px solid #10b981; border-radius:8px;";
+
+    // -- POSITIVE ROW --
+    let posRow = document.createElement("div");
+    posRow.style = "display:flex; justify-content:center; gap:10px; flex-wrap:wrap; align-items:center;";
+    
+    let posLabel = document.createElement("span");
+    posLabel.innerHTML = "POSITIVE :";
+    posLabel.style = "color:#facc15; font-weight:900; font-size:16px; margin-right:5px; min-width:100px; text-align:right;";
+    posRow.appendChild(posLabel);
+
+    let clearPosBtn = document.createElement("button");
+    clearPosBtn.innerHTML = "🧹 Clear";
+    clearPosBtn.style = "background:linear-gradient(135deg, #475569, #1e293b); color:#facc15; border:1px solid #facc15; padding:6px 14px; font-weight:900; cursor:pointer; border-radius:4px; margin-right:15px;";
+    clearPosBtn.onclick = () => {
+        window.__dba3ActiveHighlightNums.clear();
+        buildDashaBukthiAntaraMixer();
+    };
+    posRow.appendChild(clearPosBtn);
+
+    for (let i = 1; i <= 12; i++) {
+        let btn = document.createElement("button");
+        btn.innerHTML = i;
+        let isActive = window.__dba3ActiveHighlightNums.has(i);
+        
+        if (isActive) {
+            btn.style = "background:#facc15; color:#000; font-weight:900; border:2px solid #000; padding:6px 14px; cursor:pointer; border-radius:4px; box-shadow: 0 0 8px #facc15;";
+        } else {
+            btn.style = "background:#010a08; color:#10b981; font-weight:900; border:1px solid #10b981; padding:6px 14px; cursor:pointer; border-radius:4px;";
+        }
+        
+        btn.onclick = () => {
+            if (window.__dba3ActiveHighlightNums.has(i)) {
+                window.__dba3ActiveHighlightNums.delete(i);
+            } else {
+                window.__dba3ActiveHighlightNums.add(i);
+                window.__dba3NegativeHighlightNums.delete(i); 
+            }
+            buildDashaBukthiAntaraMixer();
+        };
+        posRow.appendChild(btn);
+    }
+    hlWrap.appendChild(posRow);
+
+    // -- NEGATIVE ROW (UPDATED STYLES) --
+    let negRow = document.createElement("div");
+    negRow.style = "display:flex; justify-content:center; gap:10px; flex-wrap:wrap; align-items:center;";
+    
+    let negLabel = document.createElement("span");
+    negLabel.innerHTML = "NEGATIVE :";
+    negLabel.style = "color:#ef4444; font-weight:900; font-size:16px; margin-right:5px; min-width:100px; text-align:right;";
+    negRow.appendChild(negLabel);
+
+    let clearNegBtn = document.createElement("button");
+    clearNegBtn.innerHTML = "🧹 Clear";
+    clearNegBtn.style = "background:linear-gradient(135deg, #475569, #1e293b); color:#ef4444; border:1px solid #ef4444; padding:6px 14px; font-weight:900; cursor:pointer; border-radius:4px; margin-right:15px;";
+    clearNegBtn.onclick = () => {
+        window.__dba3NegativeHighlightNums.clear();
+        buildDashaBukthiAntaraMixer();
+    };
+    negRow.appendChild(clearNegBtn);
+
+    for (let i = 1; i <= 12; i++) {
+        let btn = document.createElement("button");
+        btn.innerHTML = i;
+        let isActive = window.__dba3NegativeHighlightNums.has(i);
+        
+        if (isActive) {
+            // Dark Red Background with Black Border for buttons
+            btn.style = "background:#8b0000; color:#ffffff; font-weight:900; border:2px solid #000000; padding:6px 14px; cursor:pointer; border-radius:4px; box-shadow: 0 0 8px #8b0000;";
+        } else {
+            btn.style = "background:#010a08; color:#10b981; font-weight:900; border:1px solid #10b981; padding:6px 14px; cursor:pointer; border-radius:4px;";
+        }
+        
+        btn.onclick = () => {
+            if (window.__dba3NegativeHighlightNums.has(i)) {
+                window.__dba3NegativeHighlightNums.delete(i);
+            } else {
+                window.__dba3NegativeHighlightNums.add(i);
+                window.__dba3ActiveHighlightNums.delete(i); 
+            }
+            buildDashaBukthiAntaraMixer();
+        };
+        negRow.appendChild(btn);
+    }
+    hlWrap.appendChild(negRow);
+
+    innerWrap.appendChild(hlWrap);
+
+    
+	
+	
+	// ==========================================
+    // HIGHLIGHT FORMATTER HELPER (NORMAL TEXT WEIGHT)
+    // ==========================================
+    function formatHighlightNums(numStr) {
+        if (!numStr || numStr === "-") return "-";
+        
+        let parts = numStr.split(',');
+
+        let formattedParts = parts.map(part => {
+            return part.replace(/\b(\d+)\b/g, (match) => {
+                let n = parseInt(match, 10);
+                
+                if (window.__dba3NegativeHighlightNums.has(n)) {
+                    // NEGATIVE (Dark Red Box, White Text, White Border, NORMAL FONT WEIGHT)
+                    return `<span style="background-color:#8b0000; color:#ffffff; padding:2px 5px; border:1px solid #ffffff; border-radius:4px; font-weight:500; text-shadow:none; box-shadow: 0 0 5px rgba(255, 255, 255, 0.6); display:inline-block; margin: 2px 2px; line-height: 1;">${match}</span>`;
+                } else if (window.__dba3ActiveHighlightNums.has(n)) {
+                    // POSITIVE (Black Box, Yellow Text, Yellow Border, NORMAL FONT WEIGHT)
+                    return `<span style="background-color:#000; color:#facc15; padding:2px 5px; border:1px solid #facc15; border-radius:4px; font-weight:500; text-shadow:none; box-shadow: 0 0 4px rgba(250, 204, 21, 0.5); display:inline-block; margin: 2px 2px; line-height: 1;">${match}</span>`;
+                }
+                
+                // STANDARD NUMBER
+                return `<span style="margin: 0 1px;">${match}</span>`;
+            });
+        });
+
+        return formattedParts.join("<span style='color:#ecfdf5; margin: 0 4px; font-weight: 500; opacity: 0.6;'>,</span>");
+    }
+	
+	
+	
+
+    // ==========================================
     // TABLE GENERATION
+    // ==========================================
     const table = document.createElement("table");
     table.style.width = "100%";
     table.style.borderCollapse = "collapse";
@@ -7193,49 +7319,48 @@ function buildDashaBukthiAntaraMixer() {
 
     let dPlanet = window.__dba3Dasha;
     
-    // Calculate Sublord and Sub-Sublord for the Dasha Planet
     let dPlanetSubL = getSubLord(dPlanet) || dPlanet; 
     let dPlanetSubSubL = getSubSubLord(dPlanet) || dPlanet;
 
     let dIndex = DASHA_ORDER.indexOf(dPlanet);
     let bukthiOrder = [...DASHA_ORDER.slice(dIndex), ...DASHA_ORDER.slice(0, dIndex)];
 
-    // ✅ REPLACE IT WITH THIS NEW CODE:
     let isDashaOriginalMixer2 = document.getElementById("dashaOriginalToggle")?.checked;
 
     bukthiOrder.forEach((bPlanet, bIdx) => {
-        // --- NEW LOGIC: Dynamic Dasha Planet based on Bhukti group ---
         let effectiveDashaPlanet = dPlanet;
         
-        // Only apply the 3-3-3 rule if 'Dasha Original' is OFF
         if (!isDashaOriginalMixer2) {
             if (bIdx >= 3 && bIdx <= 5) {
-                effectiveDashaPlanet = dPlanetSubL;     // Middle 3: Sublord
+                effectiveDashaPlanet = dPlanetSubL;     
             } else if (bIdx >= 6) {
-                effectiveDashaPlanet = dPlanetSubSubL;  // Last 3: Sub-Sublord
+                effectiveDashaPlanet = dPlanetSubSubL;  
             }
         }
 
-        // Calculate Dasha numbers dynamically for the effective planet
-        let dNums = getMixer3Nums(effectiveDashaPlanet, window.__dba3DashaP, window.__dba3DashaS);
-        // -------------------------------------------------------------
+        let rawDNums = getMixer3Nums(effectiveDashaPlanet, window.__dba3DashaP, window.__dba3DashaS);
+        let dNums = formatHighlightNums(rawDNums);
 
         let bIndex = DASHA_ORDER.indexOf(bPlanet);
         let antaraOrder = [...DASHA_ORDER.slice(bIndex), ...DASHA_ORDER.slice(0, bIndex)];
-        let bNums = getMixer3Nums(bPlanet, window.__dba3BukthiP, window.__dba3BukthiS);
+        
+        let rawBNums = getMixer3Nums(bPlanet, window.__dba3BukthiP, window.__dba3BukthiS);
+        let bNums = formatHighlightNums(rawBNums);
 
         antaraOrder.forEach(aPlanet => {
-            let aNums = getMixer3Nums(aPlanet, window.__dba3AntaraP, window.__dba3AntaraS);
+            let rawANums = getMixer3Nums(aPlanet, window.__dba3AntaraP, window.__dba3AntaraS);
+            let aNums = formatHighlightNums(rawANums);
+            
             let tr = document.createElement("tr");
             tr.style.background = "#010a08"; 
             tr.innerHTML = `
-                <td style="border:1px solid #10b981; padding:6px; font-weight:500; text-align:center;">
+                <td style="border:1px solid #10b981; padding:6px; font-weight:500; text-align:center; line-height: 1.8;">
                     ${getPlanetLabel(effectiveDashaPlanet)} - <span style="color:#38bdf8;">${dNums}</span>
                 </td>
-                <td style="border:1px solid #10b981; padding:6px; font-weight:500; text-align:center;">
+                <td style="border:1px solid #10b981; padding:6px; font-weight:500; text-align:center; line-height: 1.8;">
                     ${getPlanetLabel(bPlanet)} - <span style="color:#f472b6;">${bNums}</span>
                 </td>
-                <td style="border:1px solid #10b981; padding:6px; font-weight:500; text-align:center;">
+                <td style="border:1px solid #10b981; padding:6px; font-weight:500; text-align:center; line-height: 1.8;">
                     ${getPlanetLabel(aPlanet)} - <span style="color:#a855f7;">${aNums}</span>
                 </td>
             `;
@@ -7251,6 +7376,26 @@ function buildDashaBukthiAntaraMixer() {
 
     innerWrap.appendChild(table);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 if (typeof window.__oldBuildVim === "undefined") {
     window.__oldBuildVim = buildVimshottari;
@@ -7277,5 +7422,466 @@ document.addEventListener('click', function(e) {
 });
 
 </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+(function() {
+  // 1. Force "Include Aspected By" to be checked by default
+  if (!window.__aspCbForced) {
+    let aspCb = document.getElementById("includeRaKeAspectedBy");
+    if (aspCb) {
+      aspCb.checked = true;
+      window.__aspCbForced = true;
+    }
+  }
+
+  // 2. Inject CSS for Click Highlights & New Theme Header
+  if (!document.getElementById("splitter-css-v3")) {
+    const oldStyle = document.getElementById("splitter-css-v2");
+    if (oldStyle) oldStyle.remove(); // Clean up old style
+
+    const style = document.createElement('style');
+    style.id = "splitter-css-v3";
+    style.innerHTML = `
+      /* Header Permanent Midnight Blue */
+      .splitter-header-custom {
+        background: linear-gradient(180deg, #1e3a8a, #0a0f24) !important;
+        color: #ecfdf5 !important;
+      }
+      
+      /* Click-Locked Highlight for Columns and Rows */
+      .locked-col-highlight {
+        background: linear-gradient(180deg, #be185d, #831843) !important; 
+        color: #ffffff !important;
+      }
+      .locked-col-highlight * {
+        color: #ffffff !important;
+      }
+      
+      .locked-row-highlight td {
+        background: linear-gradient(90deg, #be185d, #831843) !important; 
+        color: #ffffff !important;
+      }
+      .locked-row-highlight td * {
+        color: #ffffff !important;
+      }
+
+      /* Hover highlight just for visual feedback before clicking */
+      .hover-highlight {
+        background-color: #000000 !important; /* Changed to Pure Black */
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // 3. Global State
+  window.__splitterActiveRows = window.__splitterActiveRows || new Set();
+  window.__splitterActiveCols = window.__splitterActiveCols || new Set();
+  if (typeof window.__splitterSelectiveMode === 'undefined') {
+    window.__splitterSelectiveMode = false;
+  }
+  if (typeof window.__splitterLocalSort === 'undefined') {
+    window.__splitterLocalSort = null;
+  }
+
+  // 4. Create the Wrapper Element
+  let wrap = document.getElementById("splitterTableWrap");
+  if (!wrap) {
+    wrap = document.createElement("div");
+    wrap.id = "splitterTableWrap";
+    wrap.style.marginTop = "50px";
+    wrap.style.marginBottom = "50px";
+    wrap.style.width = "100%";
+    wrap.style.maxWidth = "1400px";
+    wrap.style.marginLeft = "auto";
+    wrap.style.marginRight = "auto";
+    document.body.appendChild(wrap);
+  }
+
+  // 5. Main Building Function
+  window.buildSignificatorsSplitterTable = function() {
+    const wrap = document.getElementById("splitterTableWrap");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+
+    if (!window.__lastSwissData) return;
+
+    const baseDasha = ["Ketu","Venus","Surya","Chandra","Mangala","Rahu","Jupiter","Saturn","Budha"];
+    let dbaOrder = typeof getDBAOrderFromMoon === "function" ? getDBAOrderFromMoon() : [];
+
+    // Determine Global Primary Planet
+    let globalPrimary = baseDasha[0];
+    if (dbaOrder.length) globalPrimary = dbaOrder[0];
+    if (window.__manualOrderOverride && baseDasha.includes(window.__manualOrderOverride)) {
+      globalPrimary = window.__manualOrderOverride;
+    }
+
+    // Reset local sort if Pivot/Global Override changes
+    if (window.__lastSplitterGlobalPrimary !== globalPrimary) {
+        window.__splitterLocalSort = null;
+        window.__lastSplitterGlobalPrimary = globalPrimary;
+    }
+
+    let primaryPlanet = window.__splitterLocalSort || globalPrimary;
+
+    // Sort planets based on selected primary planet
+    let ninePlanets = [];
+    let shiftIndex = baseDasha.indexOf(primaryPlanet);
+    if (shiftIndex !== -1) {
+       ninePlanets = [...baseDasha.slice(shiftIndex), ...baseDasha.slice(0, shiftIndex)];
+    } else {
+       ninePlanets = [...baseDasha];
+    }
+
+    // --- COLLAPSIBLE TITLE ---
+    const title = document.createElement("h2");
+    title.innerHTML = "SIGNIFICATORS 1 TO 12 SPLITTER <span style='font-size:18px;'>▼</span>";
+    title.style.margin = "0 0 15px 0";
+    title.style.fontSize = "26px";
+    title.style.fontWeight = "500";
+    title.style.textAlign = "left";
+    title.style.background = "linear-gradient(90deg,#10b981,#38bdf8)";
+    title.style.webkitBackgroundClip = "text";
+    title.style.webkitTextFillColor = "transparent";
+    title.style.letterSpacing = "1px";
+    title.style.cursor = "pointer";
+
+    if (typeof window.__splitterExpanded === 'undefined') {
+      window.__splitterExpanded = true;
+    }
+
+    const mainContainer = document.createElement("div");
+    mainContainer.style.display = window.__splitterExpanded ? "block" : "none";
+    mainContainer.style.width = "100%";
+    mainContainer.style.overflowX = "auto";
+
+    title.onclick = () => {
+      const isHidden = mainContainer.style.display === "none";
+      mainContainer.style.display = isHidden ? "block" : "none";
+      window.__splitterExpanded = isHidden;
+    };
+
+    // --- CONTROLS ROW ---
+    const controlsWrap = document.createElement("div");
+    controlsWrap.style.display = "flex";
+    controlsWrap.style.justifyContent = "center";
+    controlsWrap.style.alignItems = "center";
+    controlsWrap.style.gap = "25px";
+    controlsWrap.style.marginBottom = "15px";
+    controlsWrap.style.flexWrap = "wrap";
+
+    // Clear All Button
+    const clearBtn = document.createElement("button");
+    clearBtn.innerHTML = "🧹 Clear All Highlights";
+    clearBtn.style.background = "linear-gradient(135deg, #475569, #1e293b)";
+    clearBtn.style.color = "#facc15";
+    clearBtn.style.border = "1px solid #10b981";
+    clearBtn.style.padding = "6px 14px";
+    clearBtn.style.fontWeight = "900";
+    clearBtn.style.cursor = "pointer";
+    clearBtn.style.borderRadius = "4px";
+    clearBtn.onclick = () => {
+        window.__splitterActiveRows.clear();
+        window.__splitterActiveCols.clear();
+        window.buildSignificatorsSplitterTable();
+    };
+
+    // Selective Mode Checkbox
+    const selLabel = document.createElement("label");
+    selLabel.style.fontWeight = "900";
+    selLabel.style.color = "#d4af37";
+    selLabel.style.cursor = "pointer";
+    selLabel.style.display = "flex";
+    selLabel.style.alignItems = "center";
+    selLabel.style.gap = "8px";
+    
+    const selCheckbox = document.createElement("input");
+    selCheckbox.type = "checkbox";
+    selCheckbox.checked = window.__splitterSelectiveMode;
+    selCheckbox.onchange = (e) => {
+        window.__splitterSelectiveMode = e.target.checked;
+        window.buildSignificatorsSplitterTable();
+    };
+    selLabel.appendChild(selCheckbox);
+    selLabel.appendChild(document.createTextNode("Selective Number Chooser"));
+
+    // Sort By Dropdown
+    const sortLabel = document.createElement("label");
+    sortLabel.style.fontWeight = "900";
+    sortLabel.style.color = "#ecfdf5";
+    sortLabel.innerHTML = "Sort By: ";
+    
+    const sortSelect = document.createElement("select");
+    sortSelect.style.background = "#010a08";
+    sortSelect.style.color = "#facc15";
+    sortSelect.style.border = "1px solid #10b981";
+    sortSelect.style.padding = "4px 8px";
+    sortSelect.style.fontWeight = "bold";
+    sortSelect.style.cursor = "pointer";
+
+    baseDasha.forEach(p => {
+        let opt = document.createElement("option");
+        opt.value = p;
+        opt.text = typeof getPlanetLabel === "function" ? getPlanetLabel(p) : p;
+        if (p === primaryPlanet) opt.selected = true;
+        sortSelect.appendChild(opt);
+    });
+
+    sortSelect.onchange = (e) => {
+        window.__splitterLocalSort = e.target.value;
+        window.buildSignificatorsSplitterTable();
+    };
+    sortLabel.appendChild(sortSelect);
+
+    controlsWrap.appendChild(clearBtn);
+    controlsWrap.appendChild(selLabel);
+    controlsWrap.appendChild(sortLabel);
+    mainContainer.appendChild(controlsWrap);
+
+    // --- TABLE BUILD ---
+    const table = document.createElement("table");
+    table.style.width = "100%";
+    table.style.borderCollapse = "collapse";
+    table.style.background = "#010a08";
+
+    // Header Row
+    const thead = document.createElement("tr");
+    
+    let thPlanet = document.createElement("th");
+    thPlanet.className = "splitter-header-custom";
+    thPlanet.style.border = "1px solid #10b981";
+    thPlanet.style.padding = "10px";
+    thPlanet.style.fontWeight = "900";
+    thPlanet.innerText = "Planets";
+    thead.appendChild(thPlanet);
+
+    let thSig = document.createElement("th");
+    thSig.className = "splitter-header-custom";
+    thSig.style.border = "1px solid #10b981";
+    thSig.style.padding = "10px";
+    thSig.style.fontWeight = "900";
+    thSig.innerText = "Significator";
+    thead.appendChild(thSig);
+
+    // 1 to 12 Headers (Clickable but won't change their own color)
+    for(let i = 1; i <= 12; i++) {
+        let th = document.createElement("th");
+        th.className = "splitter-header-custom";
+        th.style.border = "1px solid #10b981";
+        th.style.padding = "10px";
+        th.style.width = "6%";
+        th.style.fontWeight = "900";
+        th.style.cursor = "pointer";
+        th.innerText = i;
+        
+        th.onclick = () => {
+            if (window.__splitterActiveCols.has(i)) {
+                window.__splitterActiveCols.delete(i);
+            } else {
+                window.__splitterActiveCols.add(i);
+            }
+            window.buildSignificatorsSplitterTable();
+        };
+
+        thead.appendChild(th);
+    }
+    table.appendChild(thead);
+
+    let totals = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0};
+
+    // Body Rows
+    ninePlanets.forEach(p => {
+        let sigRaw = typeof getPlanetSignificators === "function" ? getPlanetSignificators(p) : "-";
+
+        let nums = [];
+        if (sigRaw && sigRaw !== "-") {
+            let matches = sigRaw.match(/\d+/g);
+            if (matches) {
+                matches.forEach(m => {
+                    let n = parseInt(m, 10);
+                    if (n >= 1 && n <= 12) nums.push(n);
+                });
+            }
+        }
+        nums = [...new Set(nums)];
+
+        let tr = document.createElement("tr");
+        
+        // Highlight entire row if active
+        if (window.__splitterActiveRows.has(p)) {
+            tr.classList.add("locked-row-highlight");
+        }
+
+        let pLabel = typeof getPlanetLabel === "function" ? getPlanetLabel(p) : p;
+        
+        // Planet Cell
+        let tdPlanet = document.createElement("td");
+        tdPlanet.style.border = "1px solid #10b981";
+        tdPlanet.style.padding = "6px";
+        tdPlanet.style.fontWeight = "900";
+        tdPlanet.style.color = "#fb923c";
+        tdPlanet.style.textAlign = "center";
+        tdPlanet.style.cursor = "pointer";
+        tdPlanet.innerHTML = pLabel;
+        tdPlanet.onclick = () => {
+            if (window.__splitterActiveRows.has(p)) window.__splitterActiveRows.delete(p);
+            else window.__splitterActiveRows.add(p);
+            window.buildSignificatorsSplitterTable();
+        };
+        tr.appendChild(tdPlanet);
+
+        // Significator Cell
+        let tdSig = document.createElement("td");
+        tdSig.style.border = "1px solid #10b981";
+        tdSig.style.padding = "6px";
+        tdSig.style.fontWeight = "900";
+        tdSig.style.color = "#ffff00";
+        tdSig.style.textAlign = "center";
+        tdSig.innerHTML = sigRaw;
+        tr.appendChild(tdSig);
+
+        // 1 to 12 Data Cells
+        for(let i = 1; i <= 12; i++) {
+            let td = document.createElement("td");
+            td.style.border = "1px solid #10b981";
+            td.style.padding = "6px";
+            td.style.textAlign = "center";
+            td.style.fontWeight = "900";
+
+            // Highlight column cells if active
+            if (window.__splitterActiveCols.has(i)) {
+                td.classList.add("locked-col-highlight");
+            }
+
+            // SELECTIVE MODE
+            let showData = true;
+            if (window.__splitterSelectiveMode && !window.__splitterActiveCols.has(i)) {
+                showData = false;
+            }
+
+            if (nums.includes(i)) {
+                if (showData) {
+                    td.innerHTML = `<span style="color:#38bdf8; font-size:16px;">${i}</span>`;
+                }
+                totals[i]++;
+            } else {
+                td.innerHTML = "";
+            }
+            
+            td.style.cursor = "crosshair";
+            td.onclick = () => {
+               if (window.__splitterActiveCols.has(i)) window.__splitterActiveCols.delete(i);
+               else window.__splitterActiveCols.add(i);
+               window.buildSignificatorsSplitterTable();
+            };
+
+            tr.appendChild(td);
+        }
+        table.appendChild(tr);
+    });
+
+    // --- TOTAL ROW ---
+    let tfoot = document.createElement("tr");
+    tfoot.className = "splitter-total-row"; // Tagged so the hover logic can ignore it
+    tfoot.style.background = "linear-gradient(90deg, #1e3a8a, #0a0f24)"; 
+    tfoot.innerHTML = `
+      <td colspan="2" style="border:1px solid #10b981; padding:10px; font-weight:900; color:#10b981; text-align:right; font-size:16px;">TOTAL :</td>
+    `;
+    for(let i = 1; i <= 12; i++) {
+        let count = totals[i];
+        
+        let showData = true;
+        if (window.__splitterSelectiveMode && !window.__splitterActiveCols.has(i)) {
+            showData = false;
+        }
+
+        let displayCount = (count > 0 && showData) ? count : '-';
+        
+        let td = document.createElement("td");
+        td.style.border = "1px solid #10b981";
+        td.style.padding = "10px";
+        td.style.fontWeight = "900";
+        td.style.color = "#ecfdf5";
+        td.style.fontSize = "18px";
+        td.style.textAlign = "center";
+        
+        // Purposely removed the code that adds the .locked-col-highlight class here
+        
+        td.innerHTML = displayCount;
+        tfoot.appendChild(td);
+    }
+    table.appendChild(tfoot);
+
+    // --- HOVER LOGIC ---
+    table.addEventListener("mouseover", (e) => {
+        let cell = e.target.closest("td, th");
+        if (!cell) return;
+        
+        // Abort immediately if the mouse is hovering over the Total row
+        if (cell.parentElement.classList.contains("splitter-total-row")) return;
+        
+        let cellIndex = cell.cellIndex;
+        // Apply hover highlight ONLY to td (data) cells, ignore th
+        if (cellIndex > 1 && cell.tagName !== "TH") {
+           cell.classList.add("hover-highlight");
+        }
+    });
+
+    table.addEventListener("mouseout", (e) => {
+        let cell = e.target.closest("td, th");
+        if (!cell) return;
+        cell.classList.remove("hover-highlight");
+    });
+
+    mainContainer.appendChild(controlsWrap);
+    mainContainer.appendChild(table);
+    wrap.appendChild(title);
+    wrap.appendChild(mainContainer);
+  };
+
+  // 6. Hook into the existing build cycle
+  if (typeof window.__oldBuildSigForSplitter === "undefined") {
+      window.__oldBuildSigForSplitter = buildSignificatorTable;
+      buildSignificatorTable = function() {
+          window.__oldBuildSigForSplitter();
+          window.buildSignificatorsSplitterTable();
+      };
+  }
+
+  // 7. Initial Build
+  setTimeout(() => {
+      if (window.__lastSwissData) {
+          window.buildSignificatorsSplitterTable();
+      }
+  }, 500);
+
+})();
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </body>
 </html>
