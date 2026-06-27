@@ -1378,8 +1378,10 @@ function getCuspAbsolute(cuspNum) {
 function getPlanetSign(entity){
   let abs=getAbsDeg(entity);
   if(abs==null) return "";
-  let signIndex=Math.floor(abs/30);
-  return signs[signIndex+1];
+  
+  // THE FIX: Added tiny epsilon to prevent edge degrees (29.9999°) from rounding to the wrong sign
+  let signIndex = Math.floor((abs + 0.000001) / 30) % 12;
+  return signs[signIndex + 1];
 }
 
 
@@ -1403,14 +1405,13 @@ function getPlanetSign(entity){
 
 
 
-
 function getLordsOf(entity){
-
   let pivot=document.getElementById("kundaliPivot").value;
   let pivotAbs=getShiftedDeg(pivot);
   if(pivotAbs==null) return "";
 
-  let pivotSignIndex=Math.floor(pivotAbs/30);
+  // THE FIX: Added + 0.000001 so KP Mode float shifts don't drop the Lagna into the previous sign
+  let pivotSignIndex = Math.floor((pivotAbs + 0.000001) / 30) % 12;
 
   let result=[];
 
@@ -1522,8 +1523,7 @@ function getLordsOf(entity){
 
 
 function getConjunctPlanets(entity){
-if(entity.includes("CSL")) return "-";
-
+  if(entity.includes("CSL")) return "-";
   let abs=getShiftedDeg(entity);
   if(abs==null) return "-";
 
@@ -1532,31 +1532,43 @@ if(entity.includes("CSL")) return "-";
   planets
   .filter(p=>p!=="Lagna" && p!==entity && !p.includes("CSL"))
   .forEach(other=>{
-
     let otherAbs=getShiftedDeg(other);
     if(otherAbs==null) return;
 
     let diff=Math.abs(abs-otherAbs);
     if(diff>180) diff=360-diff;
 
-	  if(diff<=12){   // 12° orb
-	  let placedHouse = getPlanetHouse(other) || "-";
+    if(diff<=12){   // 12° orb
+      let placedHouse = getPlanetHouse(other) || "-";
 
-	  // Rahu & Ketu → show only house
-	  if(other==="Rahu" || other==="Ketu"){
-		result.push(`${other}(${placedHouse})`);
-	  }else{
-		let lords=getLordsOf(other);
-		result.push(`${other}(${placedHouse},${lords||"-"})`);
-	  }
-	}
-
-
-
+      if(other==="Rahu" || other==="Ketu"){
+        result.push(`${other}(${placedHouse})`);
+      }else{
+        let lords=getLordsOf(other);
+        
+        // NEW: Inject Cuspal Conjunctions into the conjunct planet
+        let cusps = "-";
+        if(document.getElementById("useConjCusps")?.checked){
+            cusps = getCuspalConjunct(other);
+        }
+        
+        let all = [];
+        if (lords && lords !== "-") lords.split(",").forEach(x=>all.push(x));
+        if (cusps && cusps !== "-") cusps.split(",").forEach(x=>all.push(x));
+        
+        let uniqueLords = [...new Set(all)].sort((a,b)=>a-b).join(",");
+        result.push(`${other}(${placedHouse},${uniqueLords||"-"})`);
+      }
+    }
   });
 
   return result.join(" ") || "-";
 }
+
+
+
+
+
 
 
 
@@ -1633,6 +1645,12 @@ function getAspectHouses(entity){
   return [ (house+6-1)%12+1 ].join(",");
 }
 
+
+
+
+
+
+
 function getAspectedBy(entity){
   if(entity !== "Rahu" && entity !== "Ketu") return "-";
   let targetHouse = getPlanetHouse(entity);
@@ -1670,7 +1688,19 @@ function getAspectedBy(entity){
     if(hasAspect){
       let pHouse = getPlanetHouse(p) || "-";
       let pLords = getLordsOf(p) || "-";
-      aspecting.push(`${p}(${pHouse},${pLords})`);
+      
+      // NEW: Inject Cuspal Conjunctions into the aspecting planet
+      let pCusps = "-";
+      if(document.getElementById("useConjCusps")?.checked){
+          pCusps = getCuspalConjunct(p);
+      }
+      
+      let all = [];
+      if (pLords && pLords !== "-") pLords.split(",").forEach(x=>all.push(x));
+      if (pCusps && pCusps !== "-") pCusps.split(",").forEach(x=>all.push(x));
+      
+      let uniqueLords = [...new Set(all)].sort((a,b)=>a-b).join(",");
+      aspecting.push(`${p}(${pHouse},${uniqueLords||"-"})`);
     }
   });
   
@@ -1689,15 +1719,19 @@ function getAspectedBy(entity){
 
 
 
-
 function getStarLord(entity){
   let abs = getAbsDeg(entity);
   if(abs === null) return "";
 
   // 360 degrees / 27 nakshatras = 13.3333...
-  let nakIndex = Math.floor(abs / (360/27));
+  // THE FIX: Epsilon added to prevent Nakshatra boundary drift
+  let nakIndex = Math.floor((abs + 0.000001) / (360/27));
   return NAKSHATRA_LORDS[nakIndex] || "";
 }
+
+
+
+
 
 function getSubLord(entity){
   let abs = getAbsDeg(entity);
@@ -2122,8 +2156,14 @@ function drawSIKundali(){
           text:`C${cuspNum} :: ${String(deg).padStart(2,"0")}°${String(min).padStart(2,"0")}′`,
           type:"cusp",
           deg,
+          min,
+          rawDeg: d, // Keeps the exact micro-second precision for sorting
           signIndex
         });
+		
+		
+		
+		
       }
     }
   }
@@ -2157,7 +2197,8 @@ function drawSIKundali(){
     buckets[sign].push({
       label:p,
       deg,
-      min
+      min,
+      rawDeg: d // Keeps the exact micro-second precision for sorting
     });
   });
 
@@ -2167,7 +2208,7 @@ function drawSIKundali(){
     let signIndex=ZODIAC_ORDER.indexOf(sign);
 
     function degValue(p){
-      return (p.deg || 0) + ((p.min || 0)/60);
+      return p.rawDeg; // Sorts purely by exact raw decimal, ignoring rounded text
     }
 
     if(signIndex<=5){
@@ -7535,9 +7576,14 @@ if (typeof window.__dba3SplitView2 === 'undefined') window.__dba3SplitView2 = fa
                 }
             }
         } else {
-            let l = getLordsOf(ent);
+            
+			
+			let l = getLordsOf(ent);
             l = filterOccupiedLordships(l, ent, window.__dba3RemoveOccupiedState);
             if(l && l !== "-") l.split(",").forEach(x => { nums.push(parseInt(x)); ownedHouses.push(parseInt(x)); });
+			
+			
+
         }
 
         if(document.getElementById("useConjPlanets")?.checked && !skipRaKeEnt) {
@@ -9129,7 +9175,7 @@ if (typeof window.__nadiDbaUseCuspal === 'undefined') window.__nadiDbaUseCuspal 
 if (typeof window.__nadiDbaRemOcc1 === 'undefined') window.__nadiDbaRemOcc1 = false;
 if (typeof window.__nadiDbaRemOcc2 === 'undefined') window.__nadiDbaRemOcc2 = true; // Checked by default
 if (typeof window.__nadiDbaShowAntara === 'undefined') window.__nadiDbaShowAntara = false; // Default OFF
-if (typeof window.__nadiDbaRaKeAspectConj === 'undefined') window.__nadiDbaRaKeAspectConj = false; // NEW CHECKBOX
+if (typeof window.__nadiDbaRaKeAspectConj === 'undefined') window.__nadiDbaRaKeAspectConj = true; // NEW CHECKBOX
 if (typeof window.__nadiDbaShowPlaced === 'undefined') window.__nadiDbaShowPlaced = false; // NEW SHOW PLACED
 
 function buildNadiDbaMixer() {
@@ -9577,121 +9623,209 @@ function buildNadiDbaMixer() {
             if (c && c !== "-") c.split(",").forEach(x => nums.push(parseInt(x)));
         }
 
-        if(h) nums.push(parseInt(h));
-        let unique = [...new Set(nums)].filter(x => !isNaN(x)).sort((a,b) => a - b);
-        return unique;
+        if (h) nums.push(parseInt(h));
+
+		// Remove invalid values only
+		nums = nums.filter(x => !isNaN(x));
+
+		// Keep duplicate placement/lordship numbers
+		nums.sort((a, b) => a - b);
+
+		return nums;
     }
 
-    function buildNadiCellHTML(planet, removeOccMode, hideUnselected) {
-        if (!planet) return "-";
-        
-        function makeLine(label, ent, colorStr) {
-            if(!ent) return `<div style="display:grid; grid-template-columns: 85px auto; margin-bottom:2px; color:${colorStr};"><b>${label}</b><span>: -</span></div>`;
-            let pLabel = getPlanetLabel(ent);
-            
-            // --- NEW: RAHU / KETU NON-MIXED PLUS (+) FORMATTING ---
-            if (window.__nadiDbaRaKeAspectConj && (ent === "Rahu" || ent === "Ketu")) {
-                let combinedParts = [];
-                
-                // 1. Placement (Own House ONLY)
-                let placementNums = [];
-                let h = getPlanetHouse(ent);
-                if (h) placementNums.push(parseInt(h));
-                let placeStr = placementNums.length > 0 ? formatNadiHighlightNums(placementNums.join(","), hideUnselected, ent, true) : "";
-                if (placeStr && placeStr !== "-") combinedParts.push(placeStr);
 
-                // 2. Dispositor Lords (Dispositor's Placed House + Owned Houses)
-                let dispNums = [];
-                if (window.__nadiDbaRaKeSpecial) {
-                    let sign = getPlanetSign(ent);
-                    let disp = SIGN_LORDS[sign];
-                    if (disp) {
-                        let dh = getPlanetHouse(disp);
-                        if (dh) dispNums.push(parseInt(dh));
-                        let dl = getLordsOf(disp);
-                        dl = nadiFilterOccupied(dl, removeOccMode);
-                        if (dl && dl !== "-") dl.split(",").forEach(x => dispNums.push(parseInt(x)));
+
+
+
+
+
+
+
+
+
+function buildNadiCellHTML(planet, removeOccMode, hideUnselected) {
+    if (!planet) return "-";
+    
+    function makeLine(label, ent, colorStr) {
+        if(!ent) return `<div style="display:grid; grid-template-columns: 85px auto; margin-bottom:2px; color:${colorStr};"><b>${label}</b><span>: -</span></div>`;
+        let pLabel = getPlanetLabel(ent);
+        
+        
+		
+		
+		// --- RAHU / KETU NON-MIXED PLUS (+) FORMATTING ---
+        if (window.__nadiDbaRaKeAspectConj && (ent === "Rahu" || ent === "Ketu")) {
+            let combinedParts = [];
+            
+            // 1. Placement (Own House ONLY)
+            let h = getPlanetHouse(ent);
+            if (h) {
+                combinedParts.push(formatNadiHighlightNums(String(h), hideUnselected, ent, true));
+            }
+
+            // Keep track of all numbers already used by the Placed House and Dispositor to prevent downstream duplicates
+            let usedDispositorNumbers = new Set();
+
+            
+			
+			
+			
+			// 2. Dispositor Lords
+            if (window.__nadiDbaRaKeSpecial) {
+                let sign = getPlanetSign(ent);
+                let disp = SIGN_LORDS[sign];
+                if (disp) {
+                    let dispNums = [];
+                    let dh = getPlanetHouse(disp);
+                    let dHouseNum = null; // Store dispositor placed house
+                    if (dh) {
+                        dHouseNum = parseInt(dh, 10);
+                        dispNums.push(dHouseNum);
+                        usedDispositorNumbers.add(dHouseNum);
+                    }
+                    
+                    let dl = getLordsOf(disp);
+                    dl = nadiFilterOccupied(dl, removeOccMode);
+                    if (dl && dl !== "-") {
+                        dl.split(",").forEach(x => {
+                            let val = parseInt(x.trim(), 10);
+                            dispNums.push(val);
+                            usedDispositorNumbers.add(val);
+                        });
+                    }
+                    
+                    if (document.getElementById("useConjCusps")?.checked) {
+                        let dCusps = getCuspalConjunct(disp);
+                        if(dCusps && dCusps !== "-") dCusps.split(",").forEach(x => {
+                            let val = parseInt(x, 10);
+                            dispNums.push(val);
+                            usedDispositorNumbers.add(val);
+                        });
+                    }
+                    
+                    dispNums = [...new Set(dispNums)].filter(x => !isNaN(x)).sort((a,b) => a-b);
+                    if (dispNums.length > 0) {
+                        // FIXED: Check if the number matches the Dispositor's Placed House
+                        let dispStr = dispNums.map(n => formatNadiHighlightNums(String(n), hideUnselected, ent, n === dHouseNum)).join("<span style='color:#ecfdf5; margin:0 2px; opacity:0.6;'>,</span>");
+                        combinedParts.push(dispStr);
                     }
                 }
-                dispNums = [...new Set(dispNums.filter(x => !isNaN(x)))].sort((a,b) => a-b);
-                let dispStr = dispNums.length > 0 ? formatNadiHighlightNums(dispNums.join(","), hideUnselected, ent, false) : "";
-                if (dispStr && dispStr !== "-") combinedParts.push(dispStr);
-
-                // 3. Aspected By
-                let aspNums = [];
-                let txtAsp = getAspectedBy(ent); 
-                if (txtAsp && txtAsp !== "-") {
-                    let extracted = txtAsp.match(/\((.*?)\)/g) || [];
-                    extracted.forEach(x => { x.replace(/[()]/g, "").split(",").forEach(n => aspNums.push(parseInt(n))); });
-                }
-                aspNums = [...new Set(aspNums.filter(x => !isNaN(x)))].sort((a,b) => a-b);
-                let aspStr = aspNums.length > 0 ? formatNadiHighlightNums(aspNums.join(","), hideUnselected, ent, false) : "";
-                if (aspStr && aspStr !== "-") combinedParts.push(aspStr);
-
-                // 4. Conjunct Planets
-                let conjNums = [];
-                let txtConj = getConjunctPlanets(ent);
-                if (txtConj && txtConj !== "-") {
-                    let extracted = txtConj.match(/\((.*?)\)/g) || [];
-                    extracted.forEach(x => { x.replace(/[()]/g, "").split(",").forEach(n => conjNums.push(parseInt(n))); });
-                }
-                conjNums = [...new Set(conjNums.filter(x => !isNaN(x)))].sort((a,b) => a-b);
-                let conjStr = conjNums.length > 0 ? formatNadiHighlightNums(conjNums.join(","), hideUnselected, ent, false) : "";
-                if (conjStr && conjStr !== "-") combinedParts.push(conjStr);
-
-                // Join them strictly with the "+" sign format
-                let numStr = combinedParts.length > 0 
-                    ? combinedParts.join(" <span style='color:#ecfdf5; font-weight:bold; margin:0 4px;'>+</span> ") 
-                    : "-";
-                    
-                return `<div style="display:grid; grid-template-columns: 85px auto; margin-bottom:2px; color:${colorStr};"><b>${label}</b><span>: ${pLabel} - ${numStr}</span></div>`;
             }
-            // --- END RAHU/KETU SEPARATE FORMAT ---
 
-            // --- STANDARD 7 PLANET FORMAT (Placement checked for highlighting) ---
-            let numsArray = getNadiNumsArray(ent, removeOccMode);
-            let rawPl = getPlanetHouse(ent);
-            let plVal = rawPl ? parseInt(rawPl, 10) : NaN;
+            // 3. Aspected By 
+            let txtAsp = getAspectedBy(ent); 
+            if (txtAsp && txtAsp !== "-") {
+                let matches = txtAsp.match(/([a-zA-Z]+)\(([\d,]+)\)/g) || [];
+                matches.forEach(m => {
+                    let parts = m.match(/\(([\d,]+)\)/);
+                    if (parts && parts[1]) {
+                        let rawStrNums = parts[1].split(",");
+                        let placedNum = parseInt(rawStrNums[0], 10); // The first number is ALWAYS the Placed House
+                        
+                        let filteredNums = rawStrNums.map(Number).filter(n => !usedDispositorNumbers.has(n));
+                        filteredNums = [...new Set(filteredNums)].filter(x => !isNaN(x)).sort((a,b) => a-b);
+                        
+                        if (filteredNums.length > 0) {
+                            // FIXED: Map and check against placedNum
+                            let formatted = filteredNums.map(n => formatNadiHighlightNums(String(n), hideUnselected, ent, n === placedNum)).join("<span style='color:#ecfdf5; margin:0 2px; opacity:0.6;'>,</span>");
+                            combinedParts.push(formatted);
+                        }
+                    }
+                });
+            }
 
-            // Formatter processes each number individually
-            let parts = numsArray.map(n => {
-                let isP = (!isNaN(plVal) && n === plVal);
-                return formatNadiHighlightNums(String(n), hideUnselected, ent, isP);
-            }).filter(p => p !== "");
+            // 4. Conjunct Planets 
+            let txtConj = getConjunctPlanets(ent);
+            if (txtConj && txtConj !== "-") {
+                let matches = txtConj.match(/([a-zA-Z]+)\(([\d,]+)\)/g) || [];
+                matches.forEach(m => {
+                    let parts = m.match(/\(([\d,]+)\)/);
+                    if (parts && parts[1]) {
+                        let rawStrNums = parts[1].split(",");
+                        let placedNum = parseInt(rawStrNums[0], 10); // The first number is ALWAYS the Placed House
+                        
+                        let filteredNums = rawStrNums.map(Number).filter(n => !usedDispositorNumbers.has(n));
+                        filteredNums = [...new Set(filteredNums)].filter(x => !isNaN(x)).sort((a,b) => a-b);
+                        
+                        if (filteredNums.length > 0) {
+                            // FIXED: Map and check against placedNum
+                            let formatted = filteredNums.map(n => formatNadiHighlightNums(String(n), hideUnselected, ent, n === placedNum)).join("<span style='color:#ecfdf5; margin:0 2px; opacity:0.6;'>,</span>");
+                            combinedParts.push(formatted);
+                        }
+                    }
+                });
+            }
 
-            let numStr = parts.length > 0 ? parts.join("<span style='color:#ecfdf5; margin:0 2px; opacity:0.6;'>,</span>") : "-";
+            // Filter out any trailing empty '+' blocks if everything was absorbed by the dispositor
+            combinedParts = combinedParts.filter(part => part && part !== "-");
+
+            let numStr = combinedParts.length > 0 
+                ? combinedParts.join(" <span style='color:#ecfdf5; font-weight:bold; margin:0 4px;'>+</span> ") 
+                : "-";
+                
             return `<div style="display:grid; grid-template-columns: 85px auto; margin-bottom:2px; color:${colorStr};"><b>${label}</b><span>: ${pLabel} - ${numStr}</span></div>`;
         }
 
-        let sl = getStarLord(planet);
-        let sub = getSubLord(planet);
-        let starOfSub = sub ? getStarLord(sub) : "";
-        let ss = getSubSubLord(planet);
-        let starOfSs = ss ? getStarLord(ss) : "";
+        // --- STANDARD 7 PLANET FORMAT ---
+        let numsArray = getNadiNumsArray(ent, removeOccMode);
+        let rawPl = getPlanetHouse(ent);
+        let plVal = rawPl ? parseInt(rawPl, 10) : NaN;
 
-        let c1 = "#facc15"; 
-        let c2 = "#ef4444"; 
-        let c3 = "#a855f7"; 
-        
-        const sepHTML = `<div style="border-bottom:1px solid #475569; margin:6px 0;"></div>`;
+        // Circle ONLY the placement occurrence (the first matching one)
+		let firstPlacedIndex = numsArray.indexOf(plVal);
 
-        return `
-            <div style="text-align:left; font-family:Consolas, monospace; font-size:14px; line-height:1.5; display:inline-block; width:100%;">
-                ${makeLine("Planet", planet, c1)}
-                ${makeLine("Starlord", sl, c1)}
-                
-                ${sepHTML}
-                
-                ${makeLine("Sublord", sub, c2)}
-                ${makeLine("⭐ Sublord", starOfSub, c2)}
-                
-                ${sepHTML}
-                
-                ${makeLine("Sub-Sub", ss, c3)}
-                ${makeLine("⭐ Sub-Sub", starOfSs, c3)}
-            </div>
-        `;
+		let parts = numsArray.map((n, idx) => {
+			let isP = (idx === firstPlacedIndex);
+			return formatNadiHighlightNums(String(n), hideUnselected, ent, isP);
+		}).filter(p => p !== "");
+
+        let numStr = parts.length > 0 ? parts.join("<span style='color:#ecfdf5; margin:0 2px; opacity:0.6;'>,</span>") : "-";
+        return `<div style="display:grid; grid-template-columns: 85px auto; margin-bottom:2px; color:${colorStr};"><b>${label}</b><span>: ${pLabel} - ${numStr}</span></div>`;
     }
+
+    let sl = getStarLord(planet);
+    let sub = getSubLord(planet);
+    let starOfSub = sub ? getStarLord(sub) : "";
+    let ss = getSubSubLord(planet);
+    let starOfSs = ss ? getStarLord(ss) : "";
+
+    let c1 = "#facc15"; 
+    let c2 = "#ef4444"; 
+    let c3 = "#a855f7"; 
+    
+    const sepHTML = `<div style="border-bottom:1px solid #475569; margin:6px 0;"></div>`;
+
+    return `
+        <div style="text-align:left; font-family:Consolas, monospace; font-size:14px; line-height:1.5; display:inline-block; width:100%;">
+            ${makeLine("Planet", planet, c1)}
+            ${makeLine("Starlord", sl, c1)}
+            
+            ${sepHTML}
+            
+            ${makeLine("Sublord", sub, c2)}
+            ${makeLine("⭐ Sublord", starOfSub, c2)}
+            
+            ${sepHTML}
+            
+            ${makeLine("Sub-Sub", ss, c3)}
+            ${makeLine("⭐ Sub-Sub", starOfSs, c3)}
+        </div>
+    `;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // --- BUILD DYNAMIC TABLE ---
     const table = document.createElement("table");
